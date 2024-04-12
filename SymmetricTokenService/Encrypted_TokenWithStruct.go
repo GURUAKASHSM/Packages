@@ -108,3 +108,35 @@ func GenerateAccessAndRefreshEncryptedTokensWithStruct(data interface{}, SecretK
 
 	return accessToken, refreshToken, nil
 }
+
+func RefreshAccessEncryptedTokenWithStruct(refreshToken, SecretKey string, key []byte) (string, error) {
+	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
+
+	decryptedToken, err := DecryptToken(refreshToken, key)
+	if err != nil {
+		return "", err
+	}
+
+	claims, err := ExtractDetailsFromToken(decryptedToken, SecretKey)
+	if err != nil {
+		return "", err
+	}
+
+	exp := int64(claims["exp"].(float64))
+	if time.Now().Unix() > exp {
+		return "", fmt.Errorf("refresh token has expired")
+	}
+
+	accessToken, err := CreateEncryptedTokenWithStruct(claims, SecretKey, 1,key)
+	if err != nil {
+		return "", err
+	}
+
+	accessToken, err = EncryptToken(accessToken, key)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
