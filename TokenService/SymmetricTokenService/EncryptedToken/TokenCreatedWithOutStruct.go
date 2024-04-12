@@ -1,11 +1,11 @@
-package symmetrictokenservice
+package symmetrictokenserviceencrypted
 
 import (
 	"fmt"
 	"log"
 	"time"
 
-	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -62,25 +62,15 @@ func ExtractIdFromEncryptedToken(jwtToken string, secretKey string, key []byte) 
 func GenerateAccessAndRefreshEncryptedTokens(email, id, SecretKey string, key []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Encrypted Token *****")
 
-	accessToken, err := CreateToken(email, id, SecretKey, 1)
+	accessToken, err := CreateEncryptedToken(email, id, SecretKey, 1,key)
 	if err != nil {
 		log.Println(err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateToken(email, id, SecretKey, 1*24*7)
+	refreshToken, err := CreateEncryptedToken(email, id, SecretKey, 1*24*7,key)
 	if err != nil {
 		log.Println(err)
-		return "", "", err
-	}
-
-	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
-	if err != nil {
-		return "", "", err
-	}
-
-	refreshToken, err = encryptdecrypt.EncryptToken(refreshToken, key)
-	if err != nil {
 		return "", "", err
 	}
 
@@ -105,15 +95,12 @@ func RefreshAccessEncryptedToken(refreshToken, SecretKey string, key []byte) (st
 		return "", fmt.Errorf("refresh token has expired")
 	}
 
-	accessToken, err := CreateToken(claims["email"].(string), claims["id"].(string), SecretKey, 1)
+	accessToken, err := CreateEncryptedToken(claims["email"].(string), claims["id"].(string), SecretKey, 1,key)
 	if err != nil {
 		return "", err
 	}
 
-	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
-	if err != nil {
-		return "", err
-	}
+
 
 	return accessToken, nil
 }

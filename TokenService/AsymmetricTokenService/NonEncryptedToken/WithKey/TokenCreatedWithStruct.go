@@ -1,4 +1,4 @@
-package asymmetrictokenservice
+package asymmetrictokenservicenonencryptedwithkey
 
 import (
 	"errors"
@@ -10,10 +10,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func CreateTokenWithKeyPathWithStruct(data interface{}, privateKeyPath string, validtime int64) (string, error) {
+func CreateTokenWithKeyWithStruct(data interface{}, privateKeyBytes []byte, validtime int64) (string, error) {
 	log.Println("\n ****** Create Encrypted Token with RSA ****** ")
 
-	privateKey, err := LoadRSAPrivateKey(privateKeyPath)
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
 	if err != nil {
 		return "", err
 	}
@@ -49,10 +49,10 @@ func CreateTokenWithKeyPathWithStruct(data interface{}, privateKeyPath string, v
 	return tokenString, nil
 }
 
-func ExtractIDFromTokenWithKeyPathWithStruct(tokenString string, publicKeyPath string, idname string) (string, error) {
+func ExtractIDFromTokenWithKeyWithStruct(tokenString string, publicKeyBytes []byte,idfeildname string) (string, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
 	if err != nil {
 		return "", err
 	}
@@ -69,24 +69,24 @@ func ExtractIDFromTokenWithKeyPathWithStruct(tokenString string, publicKeyPath s
 		return "", errors.New("invalid token or claims")
 	}
 
-	id, ok := claims[idname].(string)
+	id, ok := claims[idfeildname].(string)
 	if !ok {
-		return "", errors.New("id not found in claims or not a string")
+		return "", errors.New("feild name not found or not a string")
 	}
 
 	return id, nil
 }
 
-func GenerateAccessAndRefreshAsymmetricTokensWithKeyPathWithStruct(data interface{}, privateKeyPath, publicKeyPath string) (string, string, error) {
+func GenerateAccessAndRefreshAsymmetricTokensWithKeyWithStruct(data interface{}, privateKey, publicKey []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Asymmetric Tokens *****")
 
-	accessToken, err := CreateTokenWithKeyPathWithStruct(data, privateKeyPath, 1)
+	accessToken, err := CreateTokenWithKeyWithStruct(data, privateKey, 1)
 	if err != nil {
 		log.Println("Error generating access token:", err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateTokenWithKeyPathWithStruct(data, privateKeyPath, 7*24*1)
+	refreshToken, err := CreateTokenWithKeyWithStruct(data, privateKey, 7*24*1)
 	if err != nil {
 		log.Println("Error generating refresh token:", err)
 		return "", "", err
@@ -95,10 +95,10 @@ func GenerateAccessAndRefreshAsymmetricTokensWithKeyPathWithStruct(data interfac
 	return accessToken, refreshToken, nil
 }
 
-func RefreshAsymmetricAccessTokenWithKeyPathWithStruct(refreshToken, publicKeyPath, privateKeyPath string) (string, error) {
+func RefreshAsymmetricAccessTokenWithKeyWithStruct(refreshToken string, publicKey, privateKey []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
 
-	claims, err := ExtractDetailsFromTokenWithKeyPath(refreshToken, publicKeyPath)
+	claims, err := ExtractDetailsFromTokenWithKey(refreshToken, publicKey)
 	if err != nil {
 		return "", err
 	}
@@ -108,7 +108,7 @@ func RefreshAsymmetricAccessTokenWithKeyPathWithStruct(refreshToken, publicKeyPa
 		return "", fmt.Errorf("refresh token has expired")
 	}
 
-	accessToken, err := CreateTokenWithKeyPathWithStruct(claims, privateKeyPath, 1)
+	accessToken, err := CreateTokenWithKeyWithStruct(claims, privateKey, 1)
 	if err != nil {
 		return "", err
 	}

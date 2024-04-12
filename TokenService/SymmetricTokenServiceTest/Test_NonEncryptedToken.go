@@ -3,7 +3,7 @@ package service_test
 import (
 	"log"
 	"testing"
-	service "github.com/GURUAKASHSM/Packages/SymmetricTokenService"
+	service "github.com/GURUAKASHSM/Packages/TokenService/SymmetricTokenService/NonEncryptedToken"
 )
 
 func TestCreateToken(t *testing.T) {

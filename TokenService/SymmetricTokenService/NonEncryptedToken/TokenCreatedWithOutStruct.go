@@ -1,4 +1,4 @@
-package symmetrictokenservice
+package symmetrictokenservicenonencrypted
 
 import (
 	"fmt"

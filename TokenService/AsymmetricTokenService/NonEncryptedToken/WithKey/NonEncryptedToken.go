@@ -1,15 +1,25 @@
-package asymmetrictokenservice
+package asymmetrictokenservicenonencryptedwithkey
 
 import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
+type TokenManager struct {
+	RevokedTokens      map[string]time.Time
+	RevokedTokensMutex sync.RWMutex
+}
 
+func NewTokenManager() *TokenManager {
+	return &TokenManager{
+		RevokedTokens: make(map[string]time.Time),
+	}
+}
 
 func ExtractDetailsFromTokenWithKey(tokenString string, publicKeyBytes []byte) (jwt.MapClaims, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
@@ -33,7 +43,6 @@ func ExtractDetailsFromTokenWithKey(tokenString string, publicKeyBytes []byte) (
 
 	return claims, nil
 }
-
 
 // IsTokenValid checks if a token is valid or not
 func IsTokenValidWithKey(tokenString string, publicKeyBytes []byte) bool {
@@ -76,10 +85,10 @@ func (tm *TokenManager) BlockTokenWithKey(jwtToken string, publicKeyBytes []byte
 		return errors.New("invalid token")
 	}
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
-	tm.revokedTokens[jwtToken] = expirationTime
+	tm.RevokedTokens[jwtToken] = expirationTime
 
 	return nil
 }
@@ -92,13 +101,13 @@ func (tm *TokenManager) UnblockTokenWithKey(jwtToken string, publicKeyBytes []by
 		return err
 	}
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
 	// Iterate through blocked tokens and remove the one with the matching expiration time
-	for token, exp := range tm.revokedTokens {
+	for token, exp := range tm.RevokedTokens {
 		if exp.Equal(expirationTime) {
-			delete(tm.revokedTokens, token)
+			delete(tm.RevokedTokens, token)
 			return nil
 		}
 	}
@@ -137,5 +146,3 @@ func ExtractExpirationTimeFromTokenWithKey(jwtToken string, publicKeyBytes []byt
 	expirationTime := time.Unix(int64(exp), 0)
 	return expirationTime, nil
 }
-
-

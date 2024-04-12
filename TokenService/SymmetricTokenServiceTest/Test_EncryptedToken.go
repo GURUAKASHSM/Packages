@@ -3,8 +3,11 @@ package service_test
 import (
 	"log"
 	"testing"
-	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
-	service "github.com/GURUAKASHSM/Packages/SymmetricTokenService"
+
+
+    
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
+	service "github.com/GURUAKASHSM/Packages/TokenService/SymmetricTokenService/EncryptedToken"
 )
 
 func TestCreateEncryptedToken(t *testing.T) {
@@ -99,6 +102,7 @@ func TestTokenManager_BlockUnblockEncryptedToken(t *testing.T) {
 	}
 
 	tokenManager := service.NewTokenManager()
+
 
 	err = tokenManager.BlockEncryptedToken(token, key)
 	if err != nil {

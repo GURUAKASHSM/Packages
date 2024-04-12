@@ -1,4 +1,4 @@
-package symmetrictokenservice
+package symmetrictokenserviceencrypted
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"time"
 
-	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
 	"github.com/golang-jwt/jwt/v4"
 )
 

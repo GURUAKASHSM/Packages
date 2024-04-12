@@ -1,14 +1,26 @@
-package symmetrictokenservice
+package symmetrictokenserviceencrypted
 
 import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
-	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
 	"github.com/golang-jwt/jwt/v4"
 )
+
+type TokenManager struct {
+	RevokedTokens      map[string]time.Time
+	RevokedTokensMutex sync.RWMutex
+}
+
+func NewTokenManager() *TokenManager {
+	return &TokenManager{
+		RevokedTokens: make(map[string]time.Time),
+	}
+}
 
 func ExtractDetailsFromEncryptedToken(jwtToken string, secretKey string, key []byte) (map[string]interface{}, error) {
 	log.Println("\n ****** Extract Details Form Encrypted Token ****** ")
@@ -71,20 +83,20 @@ func ValidateEncryptedtoken(jwtToken, SecretKey string, key []byte) (bool, error
 func (tm *TokenManager) BlockEncryptedToken(token string, key []byte) error {
 	log.Println("\n ****** Block Encrypted Token ****** ")
 
+	expirationTime, err := ExtractExpirationTimeFromEncryptedToken(token, key) // Fix here
+	if err != nil {
+		return err
+	}
+
 	decryptedToken, err := encryptdecrypt.DecryptToken(token, key)
 	if err != nil {
 		return err
 	}
 
-	expirationTime, err := ExtractExpirationTimeFromToken(decryptedToken) // Fix here
-	if err != nil {
-		return err
-	}
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
-
-	tm.revokedTokens[decryptedToken] = expirationTime // Fix here
+	tm.RevokedTokens[decryptedToken] = expirationTime // Fix here
 
 	return nil
 }
@@ -92,21 +104,15 @@ func (tm *TokenManager) BlockEncryptedToken(token string, key []byte) error {
 func (tm *TokenManager) UnblockEncryptedToken(encryptedToken, SecretKey string, key []byte) error {
 	log.Println("\n ****** UnBlock Encrypted Token ****** ")
 
-	// Decrypt the token to extract its contents
-	decryptedToken, err := encryptdecrypt.DecryptToken(encryptedToken, key)
+	expirationTime, err := ExtractExpirationTimeFromEncryptedToken(encryptedToken, key)
 	if err != nil {
 		return err
 	}
-
-	expirationTime, err := ExtractExpirationTimeFromToken(decryptedToken)
-	if err != nil {
-		return err
-	}
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
-	for token, exp := range tm.revokedTokens {
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
+	for token, exp := range tm.RevokedTokens {
 		if exp.Equal(expirationTime) {
-			delete(tm.revokedTokens, token)
+			delete(tm.RevokedTokens, token)
 			return nil
 		}
 	}
@@ -119,10 +125,10 @@ func (tm *TokenManager) IsEncryptedTokenBlocked(token string, key []byte) (bool,
 	if err != nil {
 		return false, err
 	}
-	tm.revokedTokensMutex.RLock()
-	defer tm.revokedTokensMutex.RUnlock()
+	tm.RevokedTokensMutex.RLock()
+	defer tm.RevokedTokensMutex.RUnlock()
 
-	expirationTime, found := tm.revokedTokens[decryptedToken]
+	expirationTime, found := tm.RevokedTokens[decryptedToken]
 	if !found {
 		return false, nil
 	}
@@ -155,4 +161,28 @@ func ExtractExpirationTimeFromEncryptedToken(jwtToken string, key []byte) (time.
 
 	expirationTime := time.Unix(int64(expClaim), 0)
 	return expirationTime, nil
+}
+
+func ExtractDetailsFromToken(jwtToken string, secretKey string) (map[string]interface{}, error) {
+	log.Println("\n ****** Extract Details Form NonEncrypted Token ****** ")
+	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("invalid signing method")
+		}
+		return []byte(secretKey), nil
+	})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	if token.Valid {
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+
+			return claims, nil
+		}
+	}
+
+	return nil, fmt.Errorf("invalid or expired JWT token")
 }

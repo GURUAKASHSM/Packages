@@ -1,16 +1,28 @@
-package asymmetrictokenservice
+package asymmetrictokenserviceencryptedwithkey
 
 import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
-	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
 	"github.com/dgrijalva/jwt-go"
 )
 
-func ExtractDetailsFromEncryptedTokenWithKey(tokenString string, publicKeyBytes []byte,decryptionkey []byte) (jwt.MapClaims, error) {
+type TokenManager struct {
+	RevokedTokens      map[string]time.Time
+	RevokedTokensMutex sync.RWMutex
+}
+
+func NewTokenManager() *TokenManager {
+	return &TokenManager{
+		RevokedTokens: make(map[string]time.Time),
+	}
+}
+
+func ExtractDetailsFromEncryptedTokenWithKey(tokenString string, publicKeyBytes []byte, decryptionkey []byte) (jwt.MapClaims, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -18,9 +30,9 @@ func ExtractDetailsFromEncryptedTokenWithKey(tokenString string, publicKeyBytes 
 		return nil, err
 	}
 
-	tokenString,err = encryptdecrypt.DecryptToken(tokenString,decryptionkey)
-	if err != nil{
-		return nil,err
+	tokenString, err = encryptdecrypt.DecryptToken(tokenString, decryptionkey)
+	if err != nil {
+		return nil, err
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -39,7 +51,7 @@ func ExtractDetailsFromEncryptedTokenWithKey(tokenString string, publicKeyBytes 
 }
 
 // IsTokenValid checks if a token is valid or not
-func IsEncryptedTokenValidWithKey(tokenString string, publicKeyBytes []byte,decryptionkey []byte) bool {
+func IsEncryptedTokenValidWithKey(tokenString string, publicKeyBytes []byte, decryptionkey []byte) bool {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -47,8 +59,8 @@ func IsEncryptedTokenValidWithKey(tokenString string, publicKeyBytes []byte,decr
 		return false
 	}
 
-	tokenString,err = encryptdecrypt.DecryptToken(tokenString,decryptionkey)
-	if err != nil{
+	tokenString, err = encryptdecrypt.DecryptToken(tokenString, decryptionkey)
+	if err != nil {
 		return false
 	}
 
@@ -64,7 +76,7 @@ func IsEncryptedTokenValidWithKey(tokenString string, publicKeyBytes []byte,decr
 }
 
 // BlockToken blocks an asymmetrically encrypted token
-func (tm *TokenManager) BlockEncryptedTokenWithKey(jwtToken string, publicKeyBytes []byte,decryptionkey []byte) error {
+func (tm *TokenManager) BlockEncryptedTokenWithKey(jwtToken string, publicKeyBytes []byte, decryptionkey []byte) error {
 	log.Println("\n ****** Block Asymmetric Token ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -72,13 +84,13 @@ func (tm *TokenManager) BlockEncryptedTokenWithKey(jwtToken string, publicKeyByt
 		return err
 	}
 
-	expirationTime, err := ExtractExpirationTimeFromEncryptedTokenWithKey(jwtToken, publicKeyBytes,decryptionkey)
+	expirationTime, err := ExtractExpirationTimeFromEncryptedTokenWithKey(jwtToken, publicKeyBytes, decryptionkey)
 	if err != nil {
 		return err
 	}
 
-	jwtToken,err = encryptdecrypt.DecryptToken(jwtToken,decryptionkey)
-	if err != nil{
+	jwtToken, err = encryptdecrypt.DecryptToken(jwtToken, decryptionkey)
+	if err != nil {
 		return err
 	}
 
@@ -89,36 +101,36 @@ func (tm *TokenManager) BlockEncryptedTokenWithKey(jwtToken string, publicKeyByt
 		return errors.New("invalid token")
 	}
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
-	tm.revokedTokens[jwtToken] = expirationTime
+	tm.RevokedTokens[jwtToken] = expirationTime
 
 	return nil
 }
 
 // UnblockAsymmetricToken unblocks an asymmetrically encrypted token
-func (tm *TokenManager) UnblockEncryptedTokenWithKey(jwtToken string, publicKeyBytes,decryptionkey []byte) error {
+func (tm *TokenManager) UnblockEncryptedTokenWithKey(jwtToken string, publicKeyBytes, decryptionkey []byte) error {
 	log.Println("\n ****** Unblock Asymmetric Token ****** ")
-	expirationTime, err := ExtractExpirationTimeFromEncryptedTokenWithKey(jwtToken, publicKeyBytes,decryptionkey)
+	expirationTime, err := ExtractExpirationTimeFromEncryptedTokenWithKey(jwtToken, publicKeyBytes, decryptionkey)
 	if err != nil {
 		return err
 	}
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
 	// Iterate through blocked tokens and remove the one with the matching expiration time
-	for token, exp := range tm.revokedTokens {
+	for token, exp := range tm.RevokedTokens {
 		if exp.Equal(expirationTime) {
-			delete(tm.revokedTokens, token)
+			delete(tm.RevokedTokens, token)
 			return nil
 		}
 	}
 	return fmt.Errorf("no token with expiration time '%s' is blocked", expirationTime)
 }
 
-func ExtractExpirationTimeFromEncryptedTokenWithKey(jwtToken string, publicKeyBytes,decryptionkey []byte) (time.Time, error) {
+func ExtractExpirationTimeFromEncryptedTokenWithKey(jwtToken string, publicKeyBytes, decryptionkey []byte) (time.Time, error) {
 	log.Println("\n ***** Extract Expiration Time From Asymmetric Token ***** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -126,11 +138,10 @@ func ExtractExpirationTimeFromEncryptedTokenWithKey(jwtToken string, publicKeyBy
 		return time.Time{}, err
 	}
 
-	jwtToken,err = encryptdecrypt.DecryptToken(jwtToken,decryptionkey)
-	if err != nil{
-		return time.Time{},err
+	jwtToken, err = encryptdecrypt.DecryptToken(jwtToken, decryptionkey)
+	if err != nil {
+		return time.Time{}, err
 	}
-
 
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 		return publicKey, nil

@@ -1,4 +1,4 @@
-package symmetrictokenservice
+package symmetrictokenservicenonencrypted
 
 import (
 	"errors"
@@ -11,13 +11,13 @@ import (
 )
 
 type TokenManager struct {
-	revokedTokens      map[string]time.Time
-	revokedTokensMutex sync.RWMutex
+	RevokedTokens      map[string]time.Time
+	RevokedTokensMutex sync.RWMutex
 }
 
 func NewTokenManager() *TokenManager {
 	return &TokenManager{
-		revokedTokens: make(map[string]time.Time),
+		RevokedTokens: make(map[string]time.Time),
 	}
 }
 
@@ -66,18 +66,20 @@ func Validatetoken(jwtToken, SecretKey string) bool {
 
 	return false
 }
+
+// Define methods on MyTokenManager
 func (tm *TokenManager) BlockToken(jwtToken, SecretKey string) error {
 	log.Println("\n ****** Block NonEncrypted Token ****** ")
 
-	expirationTime, err := ExtractExpirationTimeFromToken(jwtToken) // Fix here
+	expirationTime, err := ExtractExpirationTimeFromToken(jwtToken)
 	if err != nil {
 		return err
 	}
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
-	tm.revokedTokens[jwtToken] = expirationTime // Fix here
+	tm.RevokedTokens[jwtToken] = expirationTime
 
 	return nil
 }
@@ -88,11 +90,11 @@ func (tm *TokenManager) UnblockToken(jwtToken string) error {
 	if err != nil {
 		return err
 	}
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
-	for token, exp := range tm.revokedTokens {
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
+	for token, exp := range tm.RevokedTokens {
 		if exp.Equal(expirationTime) {
-			delete(tm.revokedTokens, token)
+			delete(tm.RevokedTokens, token)
 			return nil
 		}
 	}
@@ -101,10 +103,10 @@ func (tm *TokenManager) UnblockToken(jwtToken string) error {
 
 func (tm *TokenManager) IsTokenBlocked(token string) bool {
 	log.Println("\n ****** Is NonEncrypted Token Blocked****** ")
-	tm.revokedTokensMutex.RLock()
-	defer tm.revokedTokensMutex.RUnlock()
+	tm.RevokedTokensMutex.RLock()
+	defer tm.RevokedTokensMutex.RUnlock()
 
-	expirationTime, found := tm.revokedTokens[token]
+	expirationTime, found := tm.RevokedTokens[token]
 	if !found {
 		return false
 	}

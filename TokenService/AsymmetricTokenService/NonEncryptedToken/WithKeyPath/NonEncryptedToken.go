@@ -1,58 +1,31 @@
-package asymmetrictokenservice
+package asymmetrictokenservicenonencryptedwithkeypath
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"sync"
 	"time"
 
+	asymmetrictokenservice "github.com/GURUAKASHSM/Packages/TokenService/AsymmetricTokenService"
 	"github.com/dgrijalva/jwt-go"
 )
 
 type TokenManager struct {
-	revokedTokens      map[string]time.Time
-	revokedTokensMutex sync.RWMutex
+	RevokedTokens      map[string]time.Time
+	RevokedTokensMutex sync.RWMutex
 }
 
 func NewTokenManager() *TokenManager {
 	return &TokenManager{
-		revokedTokens: make(map[string]time.Time),
+		RevokedTokens: make(map[string]time.Time),
 	}
-}
-
-// LoadRSAPrivateKey loads RSA private key from file
-func LoadRSAPrivateKey(path string) (*rsa.PrivateKey, error) {
-	keyData, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(keyData)
-	if err != nil {
-		return nil, err
-	}
-	return privateKey, nil
-}
-
-// LoadRSAPublicKey loads RSA public key from file
-func LoadRSAPublicKey(path string) (*rsa.PublicKey, error) {
-	keyData, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(keyData)
-	if err != nil {
-		return nil, err
-	}
-	return publicKey, nil
 }
 
 func ExtractDetailsFromTokenWithKeyPath(tokenString string, publicKeyPath string) (jwt.MapClaims, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := asymmetrictokenservice.LoadRSAPublicKey(publicKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +49,7 @@ func ExtractDetailsFromTokenWithKeyPath(tokenString string, publicKeyPath string
 func IsTokenValidWithKeyPath(tokenString string, publicKeyPath string) bool {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := asymmetrictokenservice.LoadRSAPublicKey(publicKeyPath)
 	if err != nil {
 		log.Println("Error loading public key:", err)
 		return false
@@ -102,7 +75,7 @@ func (tm *TokenManager) BlockTokenWithKeyPath(jwtToken, publicKeyPath string) er
 		return err
 	}
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := asymmetrictokenservice.LoadRSAPublicKey(publicKeyPath)
 	if err != nil {
 		return err
 	}
@@ -114,10 +87,10 @@ func (tm *TokenManager) BlockTokenWithKeyPath(jwtToken, publicKeyPath string) er
 		return errors.New("invalid token")
 	}
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
-	tm.revokedTokens[jwtToken] = expirationTime
+	tm.RevokedTokens[jwtToken] = expirationTime
 
 	return nil
 }
@@ -130,13 +103,13 @@ func (tm *TokenManager) UnblockTokenWithKeyPath(jwtToken string, publicKeyPath s
 		return err
 	}
 
-	tm.revokedTokensMutex.Lock()
-	defer tm.revokedTokensMutex.Unlock()
+	tm.RevokedTokensMutex.Lock()
+	defer tm.RevokedTokensMutex.Unlock()
 
 	// Iterate through blocked tokens and remove the one with the matching expiration time
-	for token, exp := range tm.revokedTokens {
+	for token, exp := range tm.RevokedTokens {
 		if exp.Equal(expirationTime) {
-			delete(tm.revokedTokens, token)
+			delete(tm.RevokedTokens, token)
 			return nil
 		}
 	}
@@ -145,10 +118,10 @@ func (tm *TokenManager) UnblockTokenWithKeyPath(jwtToken string, publicKeyPath s
 
 func (tm *TokenManager) IsTokenBlocked(token string) bool {
 	log.Println("\n ****** Is Asymmetric Token Blocked****** ")
-	tm.revokedTokensMutex.RLock()
-	defer tm.revokedTokensMutex.RUnlock()
+	tm.RevokedTokensMutex.RLock()
+	defer tm.RevokedTokensMutex.RUnlock()
 
-	expirationTime, found := tm.revokedTokens[token]
+	expirationTime, found := tm.RevokedTokens[token]
 	if !found {
 		return false
 	}
@@ -159,7 +132,7 @@ func (tm *TokenManager) IsTokenBlocked(token string) bool {
 func ExtractExpirationTimeFromTokenWithKeyPath(jwtToken string, publicKeyPath string) (time.Time, error) {
 	log.Println("\n ***** Extract Expiration Time From Asymmetric Token ***** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := asymmetrictokenservice.LoadRSAPublicKey(publicKeyPath)
 	if err != nil {
 		return time.Time{}, err
 	}
