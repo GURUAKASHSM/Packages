@@ -1,58 +1,18 @@
 package asymmetrictokenservice
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
-type TokenManager struct {
-	revokedTokens      map[string]time.Time
-	revokedTokensMutex sync.RWMutex
-}
-
-func NewTokenManager() *TokenManager {
-	return &TokenManager{
-		revokedTokens: make(map[string]time.Time),
-	}
-}
-
-// LoadRSAPrivateKey loads RSA private key from file
-func LoadRSAPrivateKey(path string) (*rsa.PrivateKey, error) {
-	keyData, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(keyData)
-	if err != nil {
-		return nil, err
-	}
-	return privateKey, nil
-}
-
-// LoadRSAPublicKey loads RSA public key from file
-func LoadRSAPublicKey(path string) (*rsa.PublicKey, error) {
-	keyData, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(keyData)
-	if err != nil {
-		return nil, err
-	}
-	return publicKey, nil
-}
-
-func CreateToken(email, id string, privateKeyPath string, validtime int64) (string, error) {
+func CreateTokenWithKey(email, id string, privateKeyBytes []byte, validtime int64) (string, error) {
 	log.Println("\n ****** Create Encrypted Token with RSA ****** ")
 
-	privateKey, err := LoadRSAPrivateKey(privateKeyPath)
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
 	if err != nil {
 		return "", err
 	}
@@ -70,10 +30,10 @@ func CreateToken(email, id string, privateKeyPath string, validtime int64) (stri
 	return tokenString, nil
 }
 
-func ExtractDetailsFromToken(tokenString string, publicKeyPath string) (jwt.MapClaims, error) {
+func ExtractDetailsFromTokenWithKey(tokenString string, publicKeyBytes []byte) (jwt.MapClaims, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -87,16 +47,16 @@ func ExtractDetailsFromToken(tokenString string, publicKeyPath string) (jwt.MapC
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return nil, err
+		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil
 }
 
-func ExtractIDFromToken(tokenString string, publicKeyPath string) (string, error) {
+func ExtractIDFromTokenWithKey(tokenString string, publicKeyBytes []byte) (string, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
 	if err != nil {
 		return "", err
 	}
@@ -122,12 +82,11 @@ func ExtractIDFromToken(tokenString string, publicKeyPath string) (string, error
 }
 
 // IsTokenValid checks if a token is valid or not
-func IsTokenValid(tokenString string, publicKeyPath string) bool {
+func IsTokenValidWithKey(tokenString string, publicKeyBytes []byte) bool {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
 	if err != nil {
-		log.Println("Error loading public key:", err)
 		return false
 	}
 
@@ -143,15 +102,15 @@ func IsTokenValid(tokenString string, publicKeyPath string) bool {
 }
 
 // BlockToken blocks an asymmetrically encrypted token
-func (tm *TokenManager) BlockToken(jwtToken, publicKeyPath string) error {
+func (tm *TokenManager) BlockTokenWithKey(jwtToken string, publicKeyBytes []byte) error {
 	log.Println("\n ****** Block Asymmetric Token ****** ")
 
-	expirationTime, err := ExtractExpirationTimeFromToken(jwtToken, publicKeyPath)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
 	if err != nil {
 		return err
 	}
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	expirationTime, err := ExtractExpirationTimeFromTokenWithKey(jwtToken, publicKeyBytes)
 	if err != nil {
 		return err
 	}
@@ -172,9 +131,9 @@ func (tm *TokenManager) BlockToken(jwtToken, publicKeyPath string) error {
 }
 
 // UnblockAsymmetricToken unblocks an asymmetrically encrypted token
-func (tm *TokenManager) UnblockToken(jwtToken string, publicKeyPath string) error {
+func (tm *TokenManager) UnblockTokenWithKey(jwtToken string, publicKeyBytes []byte) error {
 	log.Println("\n ****** Unblock Asymmetric Token ****** ")
-	expirationTime, err := ExtractExpirationTimeFromToken(jwtToken, publicKeyPath)
+	expirationTime, err := ExtractExpirationTimeFromTokenWithKey(jwtToken, publicKeyBytes)
 	if err != nil {
 		return err
 	}
@@ -192,23 +151,10 @@ func (tm *TokenManager) UnblockToken(jwtToken string, publicKeyPath string) erro
 	return fmt.Errorf("no token with expiration time '%s' is blocked", expirationTime)
 }
 
-func (tm *TokenManager) IsTokenBlocked(token string) bool {
-	log.Println("\n ****** Is Asymmetric Token Blocked****** ")
-	tm.revokedTokensMutex.RLock()
-	defer tm.revokedTokensMutex.RUnlock()
-
-	expirationTime, found := tm.revokedTokens[token]
-	if !found {
-		return false
-	}
-
-	return time.Now().Before(expirationTime)
-}
-
-func ExtractExpirationTimeFromToken(jwtToken string, publicKeyPath string) (time.Time, error) {
+func ExtractExpirationTimeFromTokenWithKey(jwtToken string, publicKeyBytes []byte) (time.Time, error) {
 	log.Println("\n ***** Extract Expiration Time From Asymmetric Token ***** ")
 
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -238,16 +184,16 @@ func ExtractExpirationTimeFromToken(jwtToken string, publicKeyPath string) (time
 	return expirationTime, nil
 }
 
-func GenerateAccessAndRefreshAsymmetricTokens(email, id, privateKeyPath, publicKeyPath string) (string, string, error) {
+func GenerateAccessAndRefreshAsymmetricTokensWithKey(email string, id string, privateKey, publicKey []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Asymmetric Tokens *****")
 
-	accessToken, err := CreateToken(email, id, privateKeyPath, 1)
+	accessToken, err := CreateTokenWithKey(email, id, privateKey, 1)
 	if err != nil {
 		log.Println("Error generating access token:", err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateToken(email, id, privateKeyPath, 7*24*1)
+	refreshToken, err := CreateTokenWithKey(email, id, privateKey, 7*24*1)
 	if err != nil {
 		log.Println("Error generating refresh token:", err)
 		return "", "", err
@@ -257,10 +203,10 @@ func GenerateAccessAndRefreshAsymmetricTokens(email, id, privateKeyPath, publicK
 }
 
 
-func RefreshAsymmetricAccessToken(refreshToken, publicKeyPath, privateKeyPath string) (string, error) {
+func RefreshAsymmetricAccessTokenWithKey(refreshToken string, publicKey, privateKey []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
 
-	claims, err := ExtractDetailsFromToken(refreshToken, publicKeyPath)
+	claims, err := ExtractDetailsFromTokenWithKey(refreshToken, publicKey)
 	if err != nil {
 		return "", err
 	}
@@ -270,7 +216,7 @@ func RefreshAsymmetricAccessToken(refreshToken, publicKeyPath, privateKeyPath st
 		return "", fmt.Errorf("refresh token has expired")
 	}
 
-	accessToken, err := CreateToken(claims["email"].(string), claims["id"].(string), privateKeyPath, 1)
+	accessToken, err := CreateTokenWithKey(claims["email"].(string), claims["id"].(string), privateKey, 1)
 	if err != nil {
 		return "", err
 	}
