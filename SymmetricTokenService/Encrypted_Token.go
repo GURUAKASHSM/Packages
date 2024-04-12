@@ -1,25 +1,19 @@
 package symmetrictokenservice
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
 	"github.com/golang-jwt/jwt/v4"
 )
-
-
 
 func ExtractDetailsFromEncryptedToken(jwtToken string, secretKey string, key []byte) (map[string]interface{}, error) {
 	log.Println("\n ****** Extract Details Form Encrypted Token ****** ")
 
-	decryptedToken, err := DecryptToken(jwtToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +43,7 @@ func ExtractDetailsFromEncryptedToken(jwtToken string, secretKey string, key []b
 func ValidateEncryptedtoken(jwtToken, SecretKey string, key []byte) (bool, error) {
 	log.Println("\n ****** Validate Encrypted Token ****** ")
 
-	decryptedToken, err := DecryptToken(jwtToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
 	if err != nil {
 		return false, err
 	}
@@ -77,7 +71,7 @@ func ValidateEncryptedtoken(jwtToken, SecretKey string, key []byte) (bool, error
 func (tm *TokenManager) BlockEncryptedToken(token string, key []byte) error {
 	log.Println("\n ****** Block Encrypted Token ****** ")
 
-	decryptedToken, err := DecryptToken(token, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(token, key)
 	if err != nil {
 		return err
 	}
@@ -95,11 +89,11 @@ func (tm *TokenManager) BlockEncryptedToken(token string, key []byte) error {
 	return nil
 }
 
-func (tm *TokenManager) UnblockEncryptedToken(encryptedToken,SecretKey string, key []byte) error {
+func (tm *TokenManager) UnblockEncryptedToken(encryptedToken, SecretKey string, key []byte) error {
 	log.Println("\n ****** UnBlock Encrypted Token ****** ")
 
 	// Decrypt the token to extract its contents
-	decryptedToken, err := DecryptToken(encryptedToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(encryptedToken, key)
 	if err != nil {
 		return err
 	}
@@ -119,10 +113,9 @@ func (tm *TokenManager) UnblockEncryptedToken(encryptedToken,SecretKey string, k
 	return fmt.Errorf("no token with expiration time '%s' is blocked", expirationTime)
 }
 
-
 func (tm *TokenManager) IsEncryptedTokenBlocked(token string, key []byte) (bool, error) {
 	log.Println("\n ****** Is Encrypted Token Blocked****** ")
-	decryptedToken, err := DecryptToken(token, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(token, key)
 	if err != nil {
 		return false, err
 	}
@@ -133,16 +126,14 @@ func (tm *TokenManager) IsEncryptedTokenBlocked(token string, key []byte) (bool,
 	if !found {
 		return false, nil
 	}
-    
+
 	return time.Now().Before(expirationTime), nil
 }
-
-
 
 func ExtractExpirationTimeFromEncryptedToken(jwtToken string, key []byte) (time.Time, error) {
 	log.Println("\n ***** Extract Expiration Time From Encrypted Token ***** ")
 
-	decryptedToken, err := DecryptToken(jwtToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -164,85 +155,4 @@ func ExtractExpirationTimeFromEncryptedToken(jwtToken string, key []byte) (time.
 
 	expirationTime := time.Unix(int64(expClaim), 0)
 	return expirationTime, nil
-}
-
-func EncryptToken(jwtToken string, key []byte) (string, error) {
-	log.Println("\n ***** Encrypt Token  ***** ")
-
-	parts := strings.Split(jwtToken, ".")
-	if len(parts) != 3 {
-		return "", errors.New("invalid JWT format")
-	}
-
-	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := rand.Read(nonce); err != nil {
-		return "", err
-	}
-
-	encryptedPayload := gcm.Seal(nonce, nonce, payload, nil)
-
-	encodedPayload := base64.RawURLEncoding.EncodeToString(encryptedPayload)
-
-	parts[1] = encodedPayload
-
-	encryptedToken := strings.Join(parts, ".")
-
-	return encryptedToken, nil
-}
-
-func DecryptToken(encryptedToken string, key []byte) (string, error) {
-	log.Println("\n ***** Decrypt Token  ***** ")
-
-	parts := strings.Split(encryptedToken, ".")
-	if len(parts) != 3 {
-		return "", errors.New("invalid JWT format")
-	}
-
-	encodedPayload := parts[1]
-	payload, err := base64.RawURLEncoding.DecodeString(encodedPayload)
-	if err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(payload) < nonceSize {
-		return "", errors.New("invalid payload size")
-	}
-	nonce, encryptedPayload := payload[:nonceSize], payload[nonceSize:]
-
-	decryptedPayload, err := gcm.Open(nil, nonce, encryptedPayload, nil)
-	if err != nil {
-		return "", err
-	}
-
-	// Reconstruct the JWT token with the decrypted payload
-	parts[1] = base64.RawURLEncoding.EncodeToString(decryptedPayload)
-	decryptedToken := strings.Join(parts, ".")
-
-	return decryptedToken, nil
 }

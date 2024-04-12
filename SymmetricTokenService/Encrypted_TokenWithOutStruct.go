@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -20,7 +21,7 @@ func CreateEncryptedToken(email, id, SecretKey string, validtime int64, key []by
 	if err != nil {
 		return "", err
 	}
-	encrypetedtoken, err := EncryptToken(tokenString, key)
+	encrypetedtoken, err := encryptdecrypt.EncryptToken(tokenString, key)
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +31,7 @@ func CreateEncryptedToken(email, id, SecretKey string, validtime int64, key []by
 func ExtractIdFromEncryptedToken(jwtToken string, secretKey string, key []byte) (string, error) {
 	log.Println("\n ****** Extract ID From Encrypted Token ****** ")
 
-	decryptedToken, err := DecryptToken(jwtToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
 	if err != nil {
 		return "", err
 	}
@@ -73,12 +74,12 @@ func GenerateAccessAndRefreshEncryptedTokens(email, id, SecretKey string, key []
 		return "", "", err
 	}
 
-	accessToken, err = EncryptToken(accessToken, key)
+	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
 	if err != nil {
 		return "", "", err
 	}
 
-	refreshToken, err = EncryptToken(refreshToken, key)
+	refreshToken, err = encryptdecrypt.EncryptToken(refreshToken, key)
 	if err != nil {
 		return "", "", err
 	}
@@ -89,7 +90,7 @@ func GenerateAccessAndRefreshEncryptedTokens(email, id, SecretKey string, key []
 func RefreshAccessEncryptedToken(refreshToken, SecretKey string, key []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
 
-	decryptedToken, err := DecryptToken(refreshToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(refreshToken, key)
 	if err != nil {
 		return "", err
 	}
@@ -109,7 +110,7 @@ func RefreshAccessEncryptedToken(refreshToken, SecretKey string, key []byte) (st
 		return "", err
 	}
 
-	accessToken, err = EncryptToken(accessToken, key)
+	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
 	if err != nil {
 		return "", err
 	}

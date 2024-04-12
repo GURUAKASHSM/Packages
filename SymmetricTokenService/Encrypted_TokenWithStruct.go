@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"time"
 
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -42,17 +43,17 @@ func CreateEncryptedTokenWithStruct(data interface{}, SecretKey string, validtim
 		return "", err
 	}
 
-	encrypetedtoken, err := EncryptToken(tokenString, key)
+	encrypetedtoken, err := encryptdecrypt.EncryptToken(tokenString, key)
 	if err != nil {
 		return "", err
 	}
 	return encrypetedtoken, nil
 }
 
-func ExtractIdFromEncryptedTokenWithIDName(jwtToken string, secretKey string, key []byte,uniqueid string) (string, error) {
+func ExtractIdFromEncryptedTokenWithIDName(jwtToken string, secretKey string, key []byte, uniqueid string) (string, error) {
 	log.Println("\n ****** Extract ID From Encrypted Token ****** ")
 
-	decryptedToken, err := DecryptToken(jwtToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
 	if err != nil {
 		return "", err
 	}
@@ -80,28 +81,27 @@ func ExtractIdFromEncryptedTokenWithIDName(jwtToken string, secretKey string, ke
 	return "", fmt.Errorf("invalid or expired JWT token")
 }
 
-
 func GenerateAccessAndRefreshEncryptedTokensWithStruct(data interface{}, SecretKey string, key []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Encrypted Token *****")
 
-	accessToken, err := CreateEncryptedTokenWithStruct(data, SecretKey, 1,key)
+	accessToken, err := CreateEncryptedTokenWithStruct(data, SecretKey, 1, key)
 	if err != nil {
 		log.Println(err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateEncryptedTokenWithStruct(data, SecretKey, 1*24*7,key)
+	refreshToken, err := CreateEncryptedTokenWithStruct(data, SecretKey, 1*24*7, key)
 	if err != nil {
 		log.Println(err)
 		return "", "", err
 	}
 
-	accessToken, err = EncryptToken(accessToken, key)
+	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
 	if err != nil {
 		return "", "", err
 	}
 
-	refreshToken, err = EncryptToken(refreshToken, key)
+	refreshToken, err = encryptdecrypt.EncryptToken(refreshToken, key)
 	if err != nil {
 		return "", "", err
 	}
@@ -112,7 +112,7 @@ func GenerateAccessAndRefreshEncryptedTokensWithStruct(data interface{}, SecretK
 func RefreshAccessEncryptedTokenWithStruct(refreshToken, SecretKey string, key []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
 
-	decryptedToken, err := DecryptToken(refreshToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(refreshToken, key)
 	if err != nil {
 		return "", err
 	}
@@ -127,16 +127,15 @@ func RefreshAccessEncryptedTokenWithStruct(refreshToken, SecretKey string, key [
 		return "", fmt.Errorf("refresh token has expired")
 	}
 
-	accessToken, err := CreateEncryptedTokenWithStruct(claims, SecretKey, 1,key)
+	accessToken, err := CreateEncryptedTokenWithStruct(claims, SecretKey, 1, key)
 	if err != nil {
 		return "", err
 	}
 
-	accessToken, err = EncryptToken(accessToken, key)
+	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
 	if err != nil {
 		return "", err
 	}
 
 	return accessToken, nil
 }
-

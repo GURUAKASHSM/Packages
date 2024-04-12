@@ -3,7 +3,7 @@ package service_test
 import (
 	"log"
 	"testing"
-
+	encryptdecrypt "github.com/GURUAKASHSM/Packages/EncryptandDecryptToken"
 	service "github.com/GURUAKASHSM/Packages/SymmetricTokenService"
 )
 
@@ -200,12 +200,12 @@ func TestEncryptAndDecryptToken(t *testing.T) {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
 
-	encryptedToken, err := service.EncryptToken(token, key)
+	encryptedToken, err := encryptdecrypt.EncryptToken(token, key)
 	if err != nil {
 		t.Errorf("Error encrypting token: %v", err)
 	}
 
-	decryptedToken, err := service.DecryptToken(encryptedToken, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(encryptedToken, key)
 	if err != nil {
 		t.Errorf("Error decrypting token: %v", err)
 	}
