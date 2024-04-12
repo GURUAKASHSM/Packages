@@ -9,36 +9,7 @@ import (
 	"errors"
 	"log"
 	"strings"
-	"time"
-
-	"github.com/dgrijalva/jwt-go"
 )
-
-// CreateAsymmetricEncryptedToken creates an encrypted token using asymmetric encryption
-func CreateAsymmetricEncryptedToken(email, id string, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey, validTime time.Duration) (string, error) {
-	log.Println("\n ****** Create Asymmetric Encrypted Token ****** ")
-
-	// Create the JWT token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"email": email,
-		"id":    id,
-		"exp":   time.Now().Add(validTime).Unix(),
-	})
-
-	// Sign the token with the private key
-	tokenString, err := token.SignedString(privateKey)
-	if err != nil {
-		return "", err
-	}
-
-	// Encrypt the token using the public key
-	encryptedToken, err := EncryptToken(tokenString, publicKey)
-	if err != nil {
-		return "", err
-	}
-
-	return encryptedToken, nil
-}
 
 func EncryptToken(jwtToken string, publicKey *rsa.PublicKey) (string, error) {
 	log.Println("\n ***** Encrypt Token  ***** ")

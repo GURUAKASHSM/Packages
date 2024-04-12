@@ -49,9 +49,6 @@ func LoadRSAPublicKey(path string) (*rsa.PublicKey, error) {
 	return publicKey, nil
 }
 
-
-
-
 func ExtractDetailsFromTokenWithKeyPath(tokenString string, publicKeyPath string) (jwt.MapClaims, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
@@ -75,38 +72,6 @@ func ExtractDetailsFromTokenWithKeyPath(tokenString string, publicKeyPath string
 	return claims, nil
 }
 
-
-
-func ExtractIDFromTokenWithKeyPath(tokenString string, publicKeyPath string) (string, error) {
-	log.Println("\n ****** Verify Token with RSA ****** ")
-
-	publicKey, err := LoadRSAPublicKey(publicKeyPath)
-	if err != nil {
-		return "", err
-	}
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return publicKey, nil
-	})
-	if err != nil {
-		return "", err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return "", errors.New("invalid token or claims")
-	}
-
-	id, ok := claims["id"].(string)
-	if !ok {
-		return "", errors.New("id not found in claims or not a string")
-	}
-
-	return id, nil
-}
-
-
-
 // IsTokenValid checks if a token is valid or not
 func IsTokenValidWithKeyPath(tokenString string, publicKeyPath string) bool {
 	log.Println("\n ****** Verify Token with RSA ****** ")
@@ -127,8 +92,6 @@ func IsTokenValidWithKeyPath(tokenString string, publicKeyPath string) bool {
 
 	return true
 }
-
-
 
 // BlockToken blocks an asymmetrically encrypted token
 func (tm *TokenManager) BlockTokenWithKeyPath(jwtToken, publicKeyPath string) error {
@@ -160,7 +123,6 @@ func (tm *TokenManager) BlockTokenWithKeyPath(jwtToken, publicKeyPath string) er
 }
 
 
-
 // UnblockAsymmetricToken unblocks an asymmetrically encrypted token
 func (tm *TokenManager) UnblockTokenWithKeyPath(jwtToken string, publicKeyPath string) error {
 	log.Println("\n ****** Unblock Asymmetric Token ****** ")
@@ -181,8 +143,6 @@ func (tm *TokenManager) UnblockTokenWithKeyPath(jwtToken string, publicKeyPath s
 	}
 	return fmt.Errorf("no token with expiration time '%s' is blocked", expirationTime)
 }
-
-
 
 func (tm *TokenManager) IsTokenBlocked(token string) bool {
 	log.Println("\n ****** Is Asymmetric Token Blocked****** ")
@@ -230,47 +190,5 @@ func ExtractExpirationTimeFromTokenWithKeyPath(jwtToken string, publicKeyPath st
 	return expirationTime, nil
 }
 
-
-
-func GenerateAccessAndRefreshAsymmetricTokensWithKeyPath(email, id, privateKeyPath, publicKeyPath string) (string, string, error) {
-	log.Println("\n ***** Generate Access and Refresh Asymmetric Tokens *****")
-
-	accessToken, err := CreateTokenWithKeyPath(email, id, privateKeyPath, 1)
-	if err != nil {
-		log.Println("Error generating access token:", err)
-		return "", "", err
-	}
-
-	refreshToken, err := CreateTokenWithKeyPath(email, id, privateKeyPath, 7*24*1)
-	if err != nil {
-		log.Println("Error generating refresh token:", err)
-		return "", "", err
-	}
-
-	return accessToken, refreshToken, nil
-}
-
-
-
-func RefreshAsymmetricAccessTokenWithKeyPath(refreshToken, publicKeyPath, privateKeyPath string) (string, error) {
-	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
-
-	claims, err := ExtractDetailsFromTokenWithKeyPath(refreshToken, publicKeyPath)
-	if err != nil {
-		return "", err
-	}
-
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
-
-	accessToken, err := CreateTokenWithKeyPath(claims["email"].(string), claims["id"].(string), privateKeyPath, 1)
-	if err != nil {
-		return "", err
-	}
-
-	return accessToken, nil
-}
 
 
