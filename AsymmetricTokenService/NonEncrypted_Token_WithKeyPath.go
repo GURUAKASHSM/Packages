@@ -122,7 +122,6 @@ func (tm *TokenManager) BlockTokenWithKeyPath(jwtToken, publicKeyPath string) er
 	return nil
 }
 
-
 // UnblockAsymmetricToken unblocks an asymmetrically encrypted token
 func (tm *TokenManager) UnblockTokenWithKeyPath(jwtToken string, publicKeyPath string) error {
 	log.Println("\n ****** Unblock Asymmetric Token ****** ")
@@ -189,6 +188,3 @@ func ExtractExpirationTimeFromTokenWithKeyPath(jwtToken string, publicKeyPath st
 	expirationTime := time.Unix(int64(exp), 0)
 	return expirationTime, nil
 }
-
-
-
