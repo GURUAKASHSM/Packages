@@ -2,7 +2,6 @@ package asymmetrictokenserviceencryptedwithkey
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func CreateEncryptedTokenWithKey(email, id string, privateKeyBytes []byte, validtime int64, encryptionkey []byte) (string, error) {
+func CreateToken(email, id string, privateKeyBytes []byte, validtime int64, encryptionkey []byte) (string, error) {
 	log.Println("\n ****** Create Encrypted Token with RSA ****** ")
 
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
@@ -37,7 +36,7 @@ func CreateEncryptedTokenWithKey(email, id string, privateKeyBytes []byte, valid
 	return tokenString, nil
 }
 
-func ExtractIDFromEncryptedTokenWithKey(tokenString string, publicKeyBytes []byte,decryptionkey []byte) (string, error) {
+func ExtractID(tokenString string, publicKeyBytes []byte, decryptionkey []byte) (string, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -45,9 +44,9 @@ func ExtractIDFromEncryptedTokenWithKey(tokenString string, publicKeyBytes []byt
 		return "", err
 	}
 
-	tokenString,err = encryptdecrypt.DecryptToken(tokenString,decryptionkey)
-	if err != nil{
-		return "",err
+	tokenString, err = encryptdecrypt.DecryptToken(tokenString, decryptionkey)
+	if err != nil {
+		return "", err
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -70,43 +69,41 @@ func ExtractIDFromEncryptedTokenWithKey(tokenString string, publicKeyBytes []byt
 	return id, nil
 }
 
-func GenerateAccessAndRefreshAsymmetricEncryptedTokensWithKey(email string, id string, privateKey, publicKey []byte,encryptionkey []byte) (string, string, error) {
+func GenerateAccessAndRefreshTokens(email string, id string, privateKey, publicKey []byte, encryptionkey []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Asymmetric Tokens *****")
 
-	accessToken, err := CreateEncryptedTokenWithKey(email, id, privateKey, 1,encryptionkey)
+	accessToken, err := CreateToken(email, id, privateKey, 1, encryptionkey)
 	if err != nil {
 		log.Println("Error generating access token:", err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateEncryptedTokenWithKey(email, id, privateKey, 7*24*1,encryptionkey)
+	refreshToken, err := CreateToken(email, id, privateKey, 7*24*1, encryptionkey)
 	if err != nil {
 		log.Println("Error generating refresh token:", err)
 		return "", "", err
 	}
 
-
-
 	return accessToken, refreshToken, nil
 }
 
-func RefreshAsymmetricAccessEcryptedTokenWithKey(refreshToken string, publicKey, privateKey []byte,encryptionkey []byte) (string, error) {
-	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
+// func RefreshAccessToken(refreshToken string, publicKey, privateKey []byte,encryptionkey []byte) (string, error) {
+// 	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
 
-	claims, err := ExtractDetailsFromEncryptedTokenWithKey(refreshToken, publicKey,encryptionkey)
-	if err != nil {
-		return "", err
-	}
+// 	claims, err := ExtractDetails(refreshToken, publicKey,encryptionkey)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
+// 	exp := int64(claims["exp"].(float64))
+// 	if time.Now().Unix() > exp {
+// 		return "", fmt.Errorf("refresh token has expired")
+// 	}
 
-	accessToken, err := CreateEncryptedTokenWithKey(claims["email"].(string), claims["id"].(string), privateKey, 1,encryptionkey)
-	if err != nil {
-		return "", err
-	}
+// 	accessToken, err := CreateToken(claims["email"].(string), claims["id"].(string), privateKey, 1,encryptionkey)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return accessToken, nil
-}
+// 	return accessToken, nil
+// }

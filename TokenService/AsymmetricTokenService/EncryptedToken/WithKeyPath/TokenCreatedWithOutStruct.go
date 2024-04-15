@@ -11,7 +11,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func CreateEncryptedTokenWithKeyPath(email, id string, privateKeyPath string, validtime int64,encryptionkey []byte) (string, error) {
+func CreateToken(email, id string, privateKeyPath string, validtime int64,encryptionkey []byte) (string, error) {
 	log.Println("\n ****** Create Encrypted Token with RSA ****** ")
 
 	privateKey, err := asymmetrictokenservice.LoadRSAPrivateKey(privateKeyPath)
@@ -38,7 +38,7 @@ func CreateEncryptedTokenWithKeyPath(email, id string, privateKeyPath string, va
 	return tokenString, nil
 }
 
-func ExtractIDFromEncryptedTokenWithKeyPath(tokenString string, publicKeyPath string,decryptionkey []byte) (string, error) {
+func ExtractID(tokenString string, publicKeyPath string,decryptionkey []byte) (string, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
 	publicKey, err := asymmetrictokenservice.LoadRSAPublicKey(publicKeyPath)
@@ -74,13 +74,13 @@ func ExtractIDFromEncryptedTokenWithKeyPath(tokenString string, publicKeyPath st
 func GenerateAccessAndRefreshAsymmetricEncryptedTokensWithKeyPath(email, id, privateKeyPath, publicKeyPath string,encryptionkey []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Asymmetric Tokens *****")
 
-	accessToken, err := CreateEncryptedTokenWithKeyPath(email, id, privateKeyPath, 1,encryptionkey)
+	accessToken, err := CreateToken(email, id, privateKeyPath, 1,encryptionkey)
 	if err != nil {
 		log.Println("Error generating access token:", err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateEncryptedTokenWithKeyPath(email, id, privateKeyPath, 7*24*1,encryptionkey)
+	refreshToken, err := CreateToken(email, id, privateKeyPath, 7*24*1,encryptionkey)
 	if err != nil {
 		log.Println("Error generating refresh token:", err)
 		return "", "", err
@@ -92,7 +92,7 @@ func GenerateAccessAndRefreshAsymmetricEncryptedTokensWithKeyPath(email, id, pri
 func RefreshAsymmetricAccessEncryptedTokenWithKeyPath(refreshToken, publicKeyPath, privateKeyPath string,encryptionkey []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
 
-	claims, err := ExtractDetailsFromEncryptedTokenWithKeyPath(refreshToken, publicKeyPath,encryptionkey)
+	claims, err := ExtractDetails(refreshToken, publicKeyPath,encryptionkey)
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +102,7 @@ func RefreshAsymmetricAccessEncryptedTokenWithKeyPath(refreshToken, publicKeyPat
 		return "", fmt.Errorf("refresh token has expired")
 	}
 
-	accessToken, err := CreateEncryptedTokenWithKeyPath(claims["email"].(string), claims["id"].(string), privateKeyPath, 1,encryptionkey)
+	accessToken, err := CreateToken(claims["email"].(string), claims["id"].(string), privateKeyPath, 1,encryptionkey)
 	if err != nil {
 		return "", err
 	}
