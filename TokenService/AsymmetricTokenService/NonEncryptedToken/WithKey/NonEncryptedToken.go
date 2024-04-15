@@ -21,7 +21,7 @@ func NewTokenManager() *TokenManager {
 	}
 }
 
-func ExtractDetailsFromTokenWithKey(tokenString string, publicKeyBytes []byte) (jwt.MapClaims, error) {
+func ExtractDetails(tokenString string, publicKeyBytes []byte) (jwt.MapClaims, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -45,7 +45,7 @@ func ExtractDetailsFromTokenWithKey(tokenString string, publicKeyBytes []byte) (
 }
 
 // IsTokenValid checks if a token is valid or not
-func IsTokenValidWithKey(tokenString string, publicKeyBytes []byte) bool {
+func IsTokenValid(tokenString string, publicKeyBytes []byte) bool {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -65,7 +65,7 @@ func IsTokenValidWithKey(tokenString string, publicKeyBytes []byte) bool {
 }
 
 // BlockToken blocks an asymmetrically encrypted token
-func (tm *TokenManager) BlockTokenWithKey(jwtToken string, publicKeyBytes []byte) error {
+func (tm *TokenManager) BlockToken(jwtToken string, publicKeyBytes []byte) error {
 	log.Println("\n ****** Block Asymmetric Token ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -73,7 +73,7 @@ func (tm *TokenManager) BlockTokenWithKey(jwtToken string, publicKeyBytes []byte
 		return err
 	}
 
-	expirationTime, err := ExtractExpirationTimeFromTokenWithKey(jwtToken, publicKeyBytes)
+	expirationTime, err := ExtractExpirationTime(jwtToken, publicKeyBytes)
 	if err != nil {
 		return err
 	}
@@ -94,9 +94,9 @@ func (tm *TokenManager) BlockTokenWithKey(jwtToken string, publicKeyBytes []byte
 }
 
 // UnblockAsymmetricToken unblocks an asymmetrically encrypted token
-func (tm *TokenManager) UnblockTokenWithKey(jwtToken string, publicKeyBytes []byte) error {
+func (tm *TokenManager) UnblockToken(jwtToken string, publicKeyBytes []byte) error {
 	log.Println("\n ****** Unblock Asymmetric Token ****** ")
-	expirationTime, err := ExtractExpirationTimeFromTokenWithKey(jwtToken, publicKeyBytes)
+	expirationTime, err := ExtractExpirationTime(jwtToken, publicKeyBytes)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (tm *TokenManager) UnblockTokenWithKey(jwtToken string, publicKeyBytes []by
 	return fmt.Errorf("no token with expiration time '%s' is blocked", expirationTime)
 }
 
-func ExtractExpirationTimeFromTokenWithKey(jwtToken string, publicKeyBytes []byte) (time.Time, error) {
+func ExtractExpirationTime(jwtToken string, publicKeyBytes []byte) (time.Time, error) {
 	log.Println("\n ***** Extract Expiration Time From Asymmetric Token ***** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
