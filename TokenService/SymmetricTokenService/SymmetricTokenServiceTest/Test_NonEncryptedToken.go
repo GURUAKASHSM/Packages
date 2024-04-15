@@ -35,7 +35,7 @@ func TestExtractIDFromToken(t *testing.T) {
 		t.Errorf("Error creating token: %v", err)
 	}
 
-	extractedID, err := service.ExtractIDFromToken(token, SecretKey)
+	extractedID, err := service.ExtractID(token, SecretKey)
 	if err != nil {
 		t.Errorf("Error extracting ID from token: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestExtractDetailsFromToken(t *testing.T) {
 		t.Errorf("Error creating token: %v", err)
 	}
 
-	claims, err := service.ExtractDetailsFromToken(token, SecretKey)
+	claims, err := service.ExtractDetails(token, SecretKey)
 	if err != nil {
 		t.Errorf("Error extracting details from token: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestValidatetoken(t *testing.T) {
 		t.Errorf("Error creating token: %v", err)
 	}
 
-	valid := service.Validatetoken(token, SecretKey)
+	valid := service.IsTokenValid(token, SecretKey)
 	if !valid {
 		t.Error("Token validation failed")
 	}
@@ -173,7 +173,7 @@ func TestExtractExpirationTimeFromToken(t *testing.T) {
 		t.Errorf("Error creating token: %v", err)
 	}
 
-	expirationTime, err := service.ExtractExpirationTimeFromToken(token)
+	expirationTime, err := service.ExtractExpirationTime(token)
 	if err != nil {
 		t.Errorf("Error extracting expiration time from token: %v", err)
 	}

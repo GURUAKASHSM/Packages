@@ -17,7 +17,7 @@ func TestCreateEncryptedToken(t *testing.T) {
 	validtime := int64(1)
 	key := []byte("1234567890123456")
 
-	encryptedToken, err := service.CreateEncryptedToken(email, id, SecretKey, validtime, key)
+	encryptedToken, err := service.CreateToken(email, id, SecretKey, validtime, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
@@ -33,12 +33,12 @@ func TestExtractIdFromEncryptedToken(t *testing.T) {
 	id := "123456"
 	key := []byte("1234567890123456")
 
-	token, err := service.CreateEncryptedToken("guruakash.ec20@bitsathy.ac.in", id, SecretKey, 1, key)
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", id, SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
 
-	extractedID, err := service.ExtractIdFromEncryptedToken(token, SecretKey, key)
+	extractedID, err := service.ExtractID(token, SecretKey, key)
 	if err != nil {
 		t.Errorf("Error extracting ID from encrypted token: %v", err)
 	}
@@ -54,12 +54,12 @@ func TestExtractDetailsFromEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	token, err := service.CreateEncryptedToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
 
-	claims, err := service.ExtractDetailsFromEncryptedToken(token, SecretKey, key)
+	claims, err := service.ExtractDetails(token, SecretKey, key)
 	if err != nil {
 		t.Errorf("Error extracting details from encrypted token: %v", err)
 	}
@@ -75,12 +75,12 @@ func TestValidateEncryptedtoken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	token, err := service.CreateEncryptedToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
 
-	valid, err := service.ValidateEncryptedtoken(token, SecretKey, key)
+	valid, err := service.IsTokenValid(token, SecretKey, key)
 	if err != nil {
 		t.Errorf("Error validating encrypted token: %v", err)
 	}
@@ -96,7 +96,7 @@ func TestTokenManager_BlockUnblockEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	token, err := service.CreateEncryptedToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
@@ -104,12 +104,12 @@ func TestTokenManager_BlockUnblockEncryptedToken(t *testing.T) {
 	tokenManager := service.NewTokenManager()
 
 
-	err = tokenManager.BlockEncryptedToken(token, key)
+	err = tokenManager.BlockToken(token, key)
 	if err != nil {
 		t.Errorf("Error blocking encrypted token: %v", err)
 	}
 
-	blocked, err := tokenManager.IsEncryptedTokenBlocked(token, key)
+	blocked, err := tokenManager.IsTokenBlocked(token, key)
 	if err != nil {
 		t.Errorf("Error checking if encrypted token is blocked: %v", err)
 	}
@@ -119,12 +119,12 @@ func TestTokenManager_BlockUnblockEncryptedToken(t *testing.T) {
 		t.Error("Encrypted token should be blocked after blocking")
 	}
 
-	err = tokenManager.UnblockEncryptedToken(token, SecretKey, key)
+	err = tokenManager.UnblockToken(token, SecretKey, key)
 	if err != nil {
 		t.Errorf("Error unblocking encrypted token: %v", err)
 	}
 
-	blocked, err = tokenManager.IsEncryptedTokenBlocked(token, key)
+	blocked, err = tokenManager.IsTokenBlocked(token, key)
 	if err != nil {
 		t.Errorf("Error checking if encrypted token is blocked: %v", err)
 	}
@@ -141,7 +141,7 @@ func TestGenerateAccessAndRefreshEncryptedTokens(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	accessToken, refreshToken, err := service.GenerateAccessAndRefreshEncryptedTokens("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, key)
+	accessToken, refreshToken, err := service.GenerateAccessAndRefreshTokens("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, key)
 	if err != nil {
 		t.Errorf("Error generating access and refresh tokens: %v", err)
 	}
@@ -157,12 +157,12 @@ func TestRefreshAccessEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	refreshToken, err := service.CreateEncryptedToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	refreshToken, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating refresh token: %v", err)
 	}
 
-	newAccessToken, err := service.RefreshAccessEncryptedToken(refreshToken, SecretKey, key)
+	newAccessToken, err := service.RefreshAccessToken(refreshToken, SecretKey, key)
 	if err != nil {
 		t.Errorf("Error refreshing access token: %v", err)
 	}
@@ -178,12 +178,12 @@ func TestExtractExpirationTimeFromEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	token, err := service.CreateEncryptedToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
 
-	expirationTime, err := service.ExtractExpirationTimeFromEncryptedToken(token, key)
+	expirationTime, err := service.ExtractExpirationTime(token, key)
 	if err != nil {
 		t.Errorf("Error extracting expiration time from encrypted token: %v", err)
 	}
@@ -199,7 +199,7 @@ func TestEncryptAndDecryptToken(t *testing.T) {
 	key := []byte("1234567890123456")
 	SecretKey := "Anon@123456789"
 
-	token, err := service.CreateEncryptedToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}

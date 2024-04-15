@@ -22,7 +22,7 @@ func NewTokenManager() *TokenManager {
 	}
 }
 
-func ExtractDetailsFromEncryptedToken(jwtToken string, secretKey string, key []byte) (map[string]interface{}, error) {
+func ExtractDetails(jwtToken string, secretKey string, key []byte) (map[string]interface{}, error) {
 	log.Println("\n ****** Extract Details Form Encrypted Token ****** ")
 
 	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
@@ -52,7 +52,9 @@ func ExtractDetailsFromEncryptedToken(jwtToken string, secretKey string, key []b
 	return nil, fmt.Errorf("invalid or expired JWT token")
 }
 
-func ValidateEncryptedtoken(jwtToken, SecretKey string, key []byte) (bool, error) {
+
+
+func IsTokenValid(jwtToken, SecretKey string, key []byte) (bool, error) {
 	log.Println("\n ****** Validate Encrypted Token ****** ")
 
 	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
@@ -80,10 +82,10 @@ func ValidateEncryptedtoken(jwtToken, SecretKey string, key []byte) (bool, error
 	return false, nil
 }
 
-func (tm *TokenManager) BlockEncryptedToken(token string, key []byte) error {
+func (tm *TokenManager) BlockToken(token string, key []byte) error {
 	log.Println("\n ****** Block Encrypted Token ****** ")
 
-	expirationTime, err := ExtractExpirationTimeFromEncryptedToken(token, key) // Fix here
+	expirationTime, err := ExtractExpirationTime(token, key) // Fix here
 	if err != nil {
 		return err
 	}
@@ -101,10 +103,10 @@ func (tm *TokenManager) BlockEncryptedToken(token string, key []byte) error {
 	return nil
 }
 
-func (tm *TokenManager) UnblockEncryptedToken(encryptedToken, SecretKey string, key []byte) error {
+func (tm *TokenManager) UnblockToken(encryptedToken, SecretKey string, key []byte) error {
 	log.Println("\n ****** UnBlock Encrypted Token ****** ")
 
-	expirationTime, err := ExtractExpirationTimeFromEncryptedToken(encryptedToken, key)
+	expirationTime, err := ExtractExpirationTime(encryptedToken, key)
 	if err != nil {
 		return err
 	}
@@ -119,7 +121,7 @@ func (tm *TokenManager) UnblockEncryptedToken(encryptedToken, SecretKey string, 
 	return fmt.Errorf("no token with expiration time '%s' is blocked", expirationTime)
 }
 
-func (tm *TokenManager) IsEncryptedTokenBlocked(token string, key []byte) (bool, error) {
+func (tm *TokenManager) IsTokenBlocked(token string, key []byte) (bool, error) {
 	log.Println("\n ****** Is Encrypted Token Blocked****** ")
 	decryptedToken, err := encryptdecrypt.DecryptToken(token, key)
 	if err != nil {
@@ -136,7 +138,7 @@ func (tm *TokenManager) IsEncryptedTokenBlocked(token string, key []byte) (bool,
 	return time.Now().Before(expirationTime), nil
 }
 
-func ExtractExpirationTimeFromEncryptedToken(jwtToken string, key []byte) (time.Time, error) {
+func ExtractExpirationTime(jwtToken string, key []byte) (time.Time, error) {
 	log.Println("\n ***** Extract Expiration Time From Encrypted Token ***** ")
 
 	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
@@ -163,26 +165,31 @@ func ExtractExpirationTimeFromEncryptedToken(jwtToken string, key []byte) (time.
 	return expirationTime, nil
 }
 
-func ExtractDetailsFromToken(jwtToken string, secretKey string) (map[string]interface{}, error) {
-	log.Println("\n ****** Extract Details Form NonEncrypted Token ****** ")
-	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("invalid signing method")
-		}
-		return []byte(secretKey), nil
-	})
+
+func RefreshAccessToken(refreshToken, SecretKey string, key []byte) (string, error) {
+	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
+
+	decryptedToken, err := encryptdecrypt.DecryptToken(refreshToken, key)
 	if err != nil {
-		log.Println(err)
-		return nil, err
+		return "", err
 	}
 
-	if token.Valid {
-
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-
-			return claims, nil
-		}
+	claims, err := ExtractDetails(decryptedToken, SecretKey,key)
+	if err != nil {
+		return "", err
 	}
 
-	return nil, fmt.Errorf("invalid or expired JWT token")
+	exp := int64(claims["exp"].(float64))
+	if time.Now().Unix() > exp {
+		return "", fmt.Errorf("refresh token has expired")
+	}
+
+	accessToken, err := CreateTokenWithStruct(claims, SecretKey, 1, key)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }
+
+

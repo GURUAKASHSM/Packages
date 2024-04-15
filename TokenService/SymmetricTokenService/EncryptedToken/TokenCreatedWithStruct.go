@@ -11,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func CreateEncryptedTokenWithStruct(data interface{}, SecretKey string, validtime int64, key []byte) (string, error) {
+func CreateTokenWithStruct(data interface{}, SecretKey string, validtime int64, key []byte) (string, error) {
 	log.Println("\n ****** Create Encrypted Token ****** ")
 
 	result := make(map[string]interface{})
@@ -50,7 +50,7 @@ func CreateEncryptedTokenWithStruct(data interface{}, SecretKey string, validtim
 	return encrypetedtoken, nil
 }
 
-func ExtractIdFromEncryptedTokenWithIDName(jwtToken string, secretKey string, key []byte, uniqueid string) (string, error) {
+func ExtractIDWithIDFeild(jwtToken string, secretKey string, key []byte, uniqueid string) (string, error) {
 	log.Println("\n ****** Extract ID From Encrypted Token ****** ")
 
 	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
@@ -84,13 +84,13 @@ func ExtractIdFromEncryptedTokenWithIDName(jwtToken string, secretKey string, ke
 func GenerateAccessAndRefreshEncryptedTokensWithStruct(data interface{}, SecretKey string, key []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Encrypted Token *****")
 
-	accessToken, err := CreateEncryptedTokenWithStruct(data, SecretKey, 1, key)
+	accessToken, err := CreateTokenWithStruct(data, SecretKey, 1, key)
 	if err != nil {
 		log.Println(err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateEncryptedTokenWithStruct(data, SecretKey, 1*24*7, key)
+	refreshToken, err := CreateTokenWithStruct(data, SecretKey, 1*24*7, key)
 	if err != nil {
 		log.Println(err)
 		return "", "", err
@@ -109,33 +109,3 @@ func GenerateAccessAndRefreshEncryptedTokensWithStruct(data interface{}, SecretK
 	return accessToken, refreshToken, nil
 }
 
-func RefreshAccessEncryptedTokenWithStruct(refreshToken, SecretKey string, key []byte) (string, error) {
-	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
-
-	decryptedToken, err := encryptdecrypt.DecryptToken(refreshToken, key)
-	if err != nil {
-		return "", err
-	}
-
-	claims, err := ExtractDetailsFromToken(decryptedToken, SecretKey)
-	if err != nil {
-		return "", err
-	}
-
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
-
-	accessToken, err := CreateEncryptedTokenWithStruct(claims, SecretKey, 1, key)
-	if err != nil {
-		return "", err
-	}
-
-	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
-	if err != nil {
-		return "", err
-	}
-
-	return accessToken, nil
-}

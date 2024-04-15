@@ -21,7 +21,7 @@ func NewTokenManager() *TokenManager {
 	}
 }
 
-func ExtractDetailsFromToken(jwtToken string, secretKey string) (map[string]interface{}, error) {
+func ExtractDetails(jwtToken string, secretKey string) (map[string]interface{}, error) {
 	log.Println("\n ****** Extract Details Form NonEncrypted Token ****** ")
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -45,7 +45,7 @@ func ExtractDetailsFromToken(jwtToken string, secretKey string) (map[string]inte
 	return nil, fmt.Errorf("invalid or expired JWT token")
 }
 
-func Validatetoken(jwtToken, SecretKey string) bool {
+func IsTokenValid(jwtToken, SecretKey string) bool {
 	log.Println("\n ****** Validate NonEncrypted Token ****** ")
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 
@@ -71,7 +71,7 @@ func Validatetoken(jwtToken, SecretKey string) bool {
 func (tm *TokenManager) BlockToken(jwtToken, SecretKey string) error {
 	log.Println("\n ****** Block NonEncrypted Token ****** ")
 
-	expirationTime, err := ExtractExpirationTimeFromToken(jwtToken)
+	expirationTime, err := ExtractExpirationTime(jwtToken)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (tm *TokenManager) BlockToken(jwtToken, SecretKey string) error {
 
 func (tm *TokenManager) UnblockToken(jwtToken string) error {
 	log.Println("\n ****** UnBlock NonEncrypted Token ****** ")
-	expirationTime, err := ExtractExpirationTimeFromToken(jwtToken)
+	expirationTime, err := ExtractExpirationTime(jwtToken)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (tm *TokenManager) IsTokenBlocked(token string) bool {
 	return time.Now().Before(expirationTime)
 }
 
-func ExtractExpirationTimeFromToken(jwtToken string) (time.Time, error) {
+func ExtractExpirationTime(jwtToken string) (time.Time, error) {
 	log.Println("\n ***** Extract Expiration Time From NonEncryptedToken ***** ")
 
 	token, _, err := new(jwt.Parser).ParseUnverified(jwtToken, jwt.MapClaims{})
@@ -135,4 +135,25 @@ func ExtractExpirationTimeFromToken(jwtToken string) (time.Time, error) {
 	// Convert exp claim from Unix timestamp to time.Time
 	expirationTime := time.Unix(int64(expClaim), 0)
 	return expirationTime, nil
+}
+
+func RefreshAccessToken(refreshToken, SecretKey string) (string, error) {
+	log.Println("\n ***** Refresh Access NonEncrypted Token ***** ")
+
+	claims, err := ExtractDetails(refreshToken, SecretKey)
+	if err != nil {
+		return "", err
+	}
+
+	exp := int64(claims["exp"].(float64))
+	if time.Now().Unix() > exp {
+		return "", fmt.Errorf("refresh token has expired")
+	}
+
+	accessToken, err := CreateTokenWithStruct(claims, SecretKey, 1)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }

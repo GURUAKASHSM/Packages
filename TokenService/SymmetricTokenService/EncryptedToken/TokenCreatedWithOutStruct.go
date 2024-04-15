@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func CreateEncryptedToken(email, id, SecretKey string, validtime int64, key []byte) (string, error) {
+func CreateToken(email, id, SecretKey string, validtime int64, key []byte) (string, error) {
 	log.Println("\n ****** Create Encrypted Token ****** ")
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": email,
@@ -28,7 +28,7 @@ func CreateEncryptedToken(email, id, SecretKey string, validtime int64, key []by
 	return encrypetedtoken, nil
 }
 
-func ExtractIdFromEncryptedToken(jwtToken string, secretKey string, key []byte) (string, error) {
+func ExtractID(jwtToken string, secretKey string, key []byte) (string, error) {
 	log.Println("\n ****** Extract ID From Encrypted Token ****** ")
 
 	decryptedToken, err := encryptdecrypt.DecryptToken(jwtToken, key)
@@ -59,16 +59,16 @@ func ExtractIdFromEncryptedToken(jwtToken string, secretKey string, key []byte) 
 	return "", fmt.Errorf("invalid or expired JWT token")
 }
 
-func GenerateAccessAndRefreshEncryptedTokens(email, id, SecretKey string, key []byte) (string, string, error) {
+func GenerateAccessAndRefreshTokens(email, id, SecretKey string, key []byte) (string, string, error) {
 	log.Println("\n ***** Generate Access and Refresh Encrypted Token *****")
 
-	accessToken, err := CreateEncryptedToken(email, id, SecretKey, 1,key)
+	accessToken, err := CreateToken(email, id, SecretKey, 1,key)
 	if err != nil {
 		log.Println(err)
 		return "", "", err
 	}
 
-	refreshToken, err := CreateEncryptedToken(email, id, SecretKey, 1*24*7,key)
+	refreshToken, err := CreateToken(email, id, SecretKey, 1*24*7,key)
 	if err != nil {
 		log.Println(err)
 		return "", "", err
@@ -77,30 +77,4 @@ func GenerateAccessAndRefreshEncryptedTokens(email, id, SecretKey string, key []
 	return accessToken, refreshToken, nil
 }
 
-func RefreshAccessEncryptedToken(refreshToken, SecretKey string, key []byte) (string, error) {
-	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
 
-	decryptedToken, err := encryptdecrypt.DecryptToken(refreshToken, key)
-	if err != nil {
-		return "", err
-	}
-
-	claims, err := ExtractDetailsFromToken(decryptedToken, SecretKey)
-	if err != nil {
-		return "", err
-	}
-
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
-
-	accessToken, err := CreateEncryptedToken(claims["email"].(string), claims["id"].(string), SecretKey, 1,key)
-	if err != nil {
-		return "", err
-	}
-
-
-
-	return accessToken, nil
-}

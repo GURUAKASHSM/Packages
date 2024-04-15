@@ -23,7 +23,7 @@ func CreateToken(email, id, SecretKey string, validtime int64) (string, error) {
 	return tokenString, nil
 }
 
-func ExtractIDFromToken(jwtToken string, secretKey string) (string, error) {
+func ExtractID(jwtToken string, secretKey string) (string, error) {
 	log.Println("\n ****** Extract ID Form NonEncrypted Token ****** ")
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 
@@ -68,23 +68,4 @@ func GenerateAccessAndRefreshTokens(email, id, SecretKey string) (string, string
 	return accessToken, refreshToken, nil
 }
 
-func RefreshAccessToken(refreshToken, SecretKey string) (string, error) {
-	log.Println("\n ***** Refresh Access NonEncrypted Token ***** ")
 
-	claims, err := ExtractDetailsFromToken(refreshToken, SecretKey)
-	if err != nil {
-		return "", err
-	}
-
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
-
-	accessToken, err := CreateToken(claims["email"].(string), claims["id"].(string), SecretKey, 1)
-	if err != nil {
-		return "", err
-	}
-
-	return accessToken, nil
-}

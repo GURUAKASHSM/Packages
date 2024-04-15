@@ -63,28 +63,9 @@ func GenerateAccessAndRefreshTokensWithStruct(data interface{}, SecretKey string
 	return accessToken, refreshToken, nil
 }
 
-func RefreshAccessTokenCreatedWithStruct(refreshToken, SecretKey string) (string, error) {
-	log.Println("\n ***** Refresh Access NonEncrypted Token ***** ")
 
-	claims, err := ExtractDetailsFromToken(refreshToken, SecretKey)
-	if err != nil {
-		return "", err
-	}
 
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
-
-	accessToken, err := CreateTokenWithStruct(claims, SecretKey, 1)
-	if err != nil {
-		return "", err
-	}
-
-	return accessToken, nil
-}
-
-func ExtractIDFromTokenCreatedWithStruct(jwtToken string, secretKey string,uniqueidname string) (string, error) {
+func ExtractIDWithStructFeild(jwtToken string, secretKey string,uniqueidname string) (string, error) {
 	log.Println("\n ****** Extract ID Form NonEncrypted Token ****** ")
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 
