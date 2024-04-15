@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	service_test.RunAllTests()
 	token, err := asymmetrictokenservice.CreateToken("guruakash.ec20@bitsathy.ac.in", "123231324", "decrypted_private_key.pem", 1)
 	if err != nil {

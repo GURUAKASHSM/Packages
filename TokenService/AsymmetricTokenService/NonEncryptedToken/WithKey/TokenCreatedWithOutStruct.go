@@ -2,7 +2,6 @@ package asymmetrictokenservicenonencryptedwithkey
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -74,25 +73,4 @@ func GenerateAccessAndRefreshTokens(email string, id string, privateKey, publicK
 	}
 
 	return accessToken, refreshToken, nil
-}
-
-func RefreshAsymmetricAccessTokenWithKey(refreshToken string, publicKey, privateKey []byte) (string, error) {
-	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
-
-	claims, err := ExtractDetails(refreshToken, publicKey)
-	if err != nil {
-		return "", err
-	}
-
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
-
-	accessToken, err := CreateToken(claims["email"].(string), claims["id"].(string), privateKey, 1)
-	if err != nil {
-		return "", err
-	}
-
-	return accessToken, nil
 }

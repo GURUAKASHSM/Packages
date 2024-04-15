@@ -25,7 +25,7 @@ func TestCreateEncryptedToken(t *testing.T) {
 	if encryptedToken == "" {
 		t.Error("Encrypted token creation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestCreateEncryptedToken")
 }
 
 func TestExtractIdFromEncryptedToken(t *testing.T) {
@@ -46,7 +46,7 @@ func TestExtractIdFromEncryptedToken(t *testing.T) {
 	if extractedID != id {
 		t.Errorf("Expected ID: %s, Got: %s", id, extractedID)
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestExtractIdFromEncryptedToken")
 
 }
 
@@ -67,7 +67,7 @@ func TestExtractDetailsFromEncryptedToken(t *testing.T) {
 	if claims == nil {
 		t.Error("Failed to extract details from encrypted token")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestExtractDetailsFromEncryptedToken")
 
 }
 
@@ -88,7 +88,7 @@ func TestValidateEncryptedtoken(t *testing.T) {
 	if !valid {
 		t.Error("Encrypted token validation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestValidateEncryptedtoken")
 
 }
 
@@ -133,7 +133,7 @@ func TestTokenManager_BlockUnblockEncryptedToken(t *testing.T) {
 		t.Error("Encrypted token should not be blocked after unblocking")
 	}
 
-	log.Println("\n \n ")
+	log.Println("\n \n TestTokenManager_BlockUnblockEncryptedToken")
 
 }
 
@@ -149,7 +149,7 @@ func TestGenerateAccessAndRefreshEncryptedTokens(t *testing.T) {
 	if accessToken == "" || refreshToken == "" {
 		t.Error("Access or refresh token generation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestGenerateAccessAndRefreshEncryptedTokens")
 
 }
 
@@ -157,10 +157,12 @@ func TestRefreshAccessEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	refreshToken, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	refreshToken,_, err := service.GenerateAccessAndRefreshTokens("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, key)
 	if err != nil {
 		t.Errorf("Error creating refresh token: %v", err)
 	}
+
+	log.Println("Created Token")
 
 	newAccessToken, err := service.RefreshAccessToken(refreshToken, SecretKey, key)
 	if err != nil {
@@ -170,7 +172,7 @@ func TestRefreshAccessEncryptedToken(t *testing.T) {
 	if newAccessToken == "" {
 		t.Error("New access token generation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestRefreshAccessEncryptedToken")
 
 }
 
@@ -191,7 +193,7 @@ func TestExtractExpirationTimeFromEncryptedToken(t *testing.T) {
 	if expirationTime.IsZero() {
 		t.Error("Expiration time extraction failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestExtractExpirationTimeFromEncryptedToken")
 
 }
 
@@ -217,6 +219,6 @@ func TestEncryptAndDecryptToken(t *testing.T) {
 	if decryptedToken != token {
 		t.Errorf("Expected decrypted token: %s, Got: %s", token, decryptedToken)
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestEncryptAndDecryptToken")
 
 }

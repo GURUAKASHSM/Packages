@@ -9,6 +9,7 @@ import (
 
 	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
 	"github.com/golang-jwt/jwt/v4"
+	typeconversionservice "github.com/GURUAKASHSM/Packages/TypeConversionService"
 )
 
 type TokenManager struct {
@@ -51,8 +52,6 @@ func ExtractDetails(jwtToken string, secretKey string, key []byte) (map[string]i
 
 	return nil, fmt.Errorf("invalid or expired JWT token")
 }
-
-
 
 func IsTokenValid(jwtToken, SecretKey string, key []byte) (bool, error) {
 	log.Println("\n ****** Validate Encrypted Token ****** ")
@@ -165,16 +164,10 @@ func ExtractExpirationTime(jwtToken string, key []byte) (time.Time, error) {
 	return expirationTime, nil
 }
 
-
 func RefreshAccessToken(refreshToken, SecretKey string, key []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
 
-	decryptedToken, err := encryptdecrypt.DecryptToken(refreshToken, key)
-	if err != nil {
-		return "", err
-	}
-
-	claims, err := ExtractDetails(decryptedToken, SecretKey,key)
+	claims, err := ExtractDetails(refreshToken, SecretKey, key)
 	if err != nil {
 		return "", err
 	}
@@ -184,12 +177,16 @@ func RefreshAccessToken(refreshToken, SecretKey string, key []byte) (string, err
 		return "", fmt.Errorf("refresh token has expired")
 	}
 
-	accessToken, err := CreateTokenWithStruct(claims, SecretKey, 1, key)
+	data, err := typeconversionservice.MapToStruct(claims)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	accessToken, err := CreateTokenWithStruct(data, SecretKey, 1, key)
 	if err != nil {
 		return "", err
 	}
 
 	return accessToken, nil
 }
-
-

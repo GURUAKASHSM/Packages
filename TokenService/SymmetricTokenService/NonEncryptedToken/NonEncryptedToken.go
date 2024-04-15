@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	typeconversionservice "github.com/GURUAKASHSM/Packages/TypeConversionService"
 )
 
 type TokenManager struct {
@@ -148,9 +149,15 @@ func RefreshAccessToken(refreshToken, SecretKey string) (string, error) {
 	exp := int64(claims["exp"].(float64))
 	if time.Now().Unix() > exp {
 		return "", fmt.Errorf("refresh token has expired")
+	} 
+
+	data,err := typeconversionservice.MapToStruct(claims)
+	if err != nil{
+		log.Println(err)
+		return "",err
 	}
 
-	accessToken, err := CreateTokenWithStruct(claims, SecretKey, 1)
+	accessToken, err := CreateTokenWithStruct(data, SecretKey, 1)
 	if err != nil {
 		return "", err
 	}

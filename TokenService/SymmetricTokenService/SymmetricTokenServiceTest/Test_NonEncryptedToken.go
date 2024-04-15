@@ -20,7 +20,7 @@ func TestCreateToken(t *testing.T) {
 	if token == "" {
 		t.Error("Token creation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestCreateToken")
 
 }
 
@@ -43,7 +43,7 @@ func TestExtractIDFromToken(t *testing.T) {
 	if extractedID != id {
 		t.Errorf("Expected ID: %s, Got: %s", id, extractedID)
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestExtractIDFromToken")
 
 }
 
@@ -66,7 +66,7 @@ func TestExtractDetailsFromToken(t *testing.T) {
 	if claims == nil {
 		t.Error("Failed to extract details from token")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestExtractDetailsFromToken")
 
 }
 
@@ -85,7 +85,7 @@ func TestValidatetoken(t *testing.T) {
 	if !valid {
 		t.Error("Token validation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestValidatetoken")
 
 }
 
@@ -119,7 +119,7 @@ func TestTokenManager_BlockUnblockToken(t *testing.T) {
 	if tokenManager.IsTokenBlocked(token) {
 		t.Error("Token should not be blocked after unblocking")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestTokenManager_BlockUnblockToken")
 
 }
 
@@ -136,7 +136,7 @@ func TestGenerateAccessAndRefreshTokens(t *testing.T) {
 	if accessToken == "" || refreshToken == "" {
 		t.Error("Access or refresh token generation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestGenerateAccessAndRefreshTokens")
 
 }
 
@@ -158,7 +158,7 @@ func TestRefreshAccessToken(t *testing.T) {
 	if newAccessToken == "" {
 		t.Error("New access token generation failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestRefreshAccessToken")
 
 }
 
@@ -181,6 +181,6 @@ func TestExtractExpirationTimeFromToken(t *testing.T) {
 	if expirationTime.IsZero() {
 		t.Error("Expiration time extraction failed")
 	}
-	log.Println("\n \n ")
+	log.Println("\n \n TestExtractExpirationTimeFromToken")
 
 }

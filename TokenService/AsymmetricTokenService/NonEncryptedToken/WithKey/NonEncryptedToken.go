@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	typeconversionservice "github.com/GURUAKASHSM/Packages/TypeConversionService"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -145,4 +146,32 @@ func ExtractExpirationTime(jwtToken string, publicKeyBytes []byte) (time.Time, e
 
 	expirationTime := time.Unix(int64(exp), 0)
 	return expirationTime, nil
+}
+
+
+func RefreshAccessToken(refreshToken string, publicKey, privateKey []byte) (string, error) {
+	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
+
+	claims, err := ExtractDetails(refreshToken, publicKey)
+	if err != nil {
+		return "", err
+	}
+
+	exp := int64(claims["exp"].(float64))
+	if time.Now().Unix() > exp {
+		return "", fmt.Errorf("refresh token has expired")
+	}
+
+	data,err := typeconversionservice.MapToStruct(claims)
+	if err != nil{
+		log.Println(err)
+		return "",err
+	}
+
+	accessToken, err := CreateTokenWithStruct(data, privateKey, 1)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }

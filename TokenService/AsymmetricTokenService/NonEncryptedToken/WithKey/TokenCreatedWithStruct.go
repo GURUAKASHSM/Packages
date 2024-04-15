@@ -2,7 +2,6 @@ package asymmetrictokenservicenonencryptedwithkey
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -49,7 +48,7 @@ func CreateTokenWithStruct(data interface{}, privateKeyBytes []byte, validtime i
 	return tokenString, nil
 }
 
-func ExtractIDWithStructFeild(tokenString string, publicKeyBytes []byte,idfeildname string) (string, error) {
+func ExtractIDWithStructFeild(tokenString string, publicKeyBytes []byte, idfeildname string) (string, error) {
 	log.Println("\n ****** Verify Token with RSA ****** ")
 
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
@@ -93,25 +92,4 @@ func GenerateAccessAndRefreshTokensWithStruct(data interface{}, privateKey, publ
 	}
 
 	return accessToken, refreshToken, nil
-}
-
-func RefreshAsymmetricAccessTokenWithKeyWithStruct(refreshToken string, publicKey, privateKey []byte) (string, error) {
-	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
-
-	claims, err := ExtractDetails(refreshToken, publicKey)
-	if err != nil {
-		return "", err
-	}
-
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		return "", fmt.Errorf("refresh token has expired")
-	}
-
-	accessToken, err := CreateTokenWithStruct(claims, privateKey, 1)
-	if err != nil {
-		return "", err
-	}
-
-	return accessToken, nil
 }

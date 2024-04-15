@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	typeconversionservice "github.com/GURUAKASHSM/Packages/TypeConversionService"
 
 	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
 	"github.com/dgrijalva/jwt-go"
@@ -168,10 +169,10 @@ func ExtractExpirationTime(jwtToken string, publicKeyBytes, decryptionkey []byte
 	return expirationTime, nil
 }
 
-func RefreshAccessToken(refreshToken string, publicKey, privateKey []byte,encryptionkey []byte) (string, error) {
+func RefreshAccessToken(refreshToken string, publicKey, privateKey []byte, encryptionkey []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
 
-	claims, err := ExtractDetails(refreshToken, publicKey,encryptionkey)
+	claims, err := ExtractDetails(refreshToken, publicKey, encryptionkey)
 	if err != nil {
 		return "", err
 	}
@@ -181,7 +182,13 @@ func RefreshAccessToken(refreshToken string, publicKey, privateKey []byte,encryp
 		return "", fmt.Errorf("refresh token has expired")
 	}
 
-	accessToken, err := CreateTokenWithStruct(claims, privateKey, 1,encryptionkey)
+	data,err := typeconversionservice.MapToStruct(claims)
+    if err != nil{
+		log.Println(err)
+		return "",err
+	}
+
+	accessToken, err := CreateTokenWithStruct(data, privateKey, 1, encryptionkey)
 	if err != nil {
 		return "", err
 	}
