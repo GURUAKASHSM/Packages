@@ -4,7 +4,7 @@ import (
 	"log"
 
 	asymmetrictokenservice "github.com/GURUAKASHSM/Packages/TokenService/AsymmetricTokenService/NonEncryptedToken/WithKeyPath"
-	service_test "github.com/GURUAKASHSM/Packages/TokenService/SymmetricTokenServiceTest"
+	service_test "github.com/GURUAKASHSM/Packages/TokenService/SymmetricTokenService/SymmetricTokenServiceTest"
 )
 
 func main() {
