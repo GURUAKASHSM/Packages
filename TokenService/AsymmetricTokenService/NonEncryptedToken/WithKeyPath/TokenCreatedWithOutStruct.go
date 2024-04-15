@@ -77,7 +77,7 @@ func GenerateAccessAndRefreshTokens(email, id, privateKeyPath, publicKeyPath str
 	return accessToken, refreshToken, nil
 }
 
-func RefreshAsymmetricAccessTokenWithKeyPath(refreshToken, publicKeyPath, privateKeyPath string) (string, error) {
+func RefreshAccessToken(refreshToken, publicKeyPath, privateKeyPath string) (string, error) {
 	log.Println("\n ***** Refresh Access Asymmetric Token ***** ")
 
 	claims, err := ExtractDetails(refreshToken, publicKeyPath)

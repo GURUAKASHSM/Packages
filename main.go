@@ -9,33 +9,33 @@ import (
 
 func main() {
 	service_test.RunAllTests()
-	token, err := asymmetrictokenservice.CreateTokenWithKeyPath("guruakash.ec20@bitsathy.ac.in", "123231324", "decrypted_private_key.pem", 1)
+	token, err := asymmetrictokenservice.CreateToken("guruakash.ec20@bitsathy.ac.in", "123231324", "decrypted_private_key.pem", 1)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("token", token)
 
-	data1, err := asymmetrictokenservice.ExtractDetailsFromTokenWithKeyPath(token, "public_key.pem")
+	data1, err := asymmetrictokenservice.ExtractDetails(token, "public_key.pem")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("details", data1)
 
-	id, err := asymmetrictokenservice.ExtractIDFromTokenWithKeyPath(token, "public_key.pem")
+	id, err := asymmetrictokenservice.ExtractID(token, "public_key.pem")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("details", id)
 
-	valid := asymmetrictokenservice.IsTokenValidWithKeyPath(token, "public_key.pem")
+	valid := asymmetrictokenservice.IsTokenValid(token, "public_key.pem")
 	log.Println("vaild", valid)
 
 	tokenManager := asymmetrictokenservice.NewTokenManager()
 
-	err = tokenManager.BlockTokenWithKeyPath(token, "public_key.pem")
+	err = tokenManager.BlockToken(token, "public_key.pem")
 	if err != nil {
 		log.Println(err)
 		return
@@ -44,7 +44,7 @@ func main() {
 	valid = tokenManager.IsTokenBlocked(token)
 	log.Println("Isblocked", valid)
 
-	err = tokenManager.UnblockTokenWithKeyPath(token, "public_key.pem")
+	err = tokenManager.UnblockToken(token, "public_key.pem")
 	if err != nil {
 		log.Println(err)
 		return
@@ -53,14 +53,14 @@ func main() {
 	valid = tokenManager.IsTokenBlocked(token)
 	log.Println("Isblocked", valid)
 
-	time, err := asymmetrictokenservice.ExtractExpirationTimeFromTokenWithKeyPath(token, "public_key.pem")
+	time, err := asymmetrictokenservice.ExtractExpirationTime(token, "public_key.pem")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("ValidTill", time)
 
-	accesstoken, refreshtoken, err := asymmetrictokenservice.GenerateAccessAndRefreshAsymmetricTokensWithKeyPath("gurakash.ec20@bitsathy.ac.in", "12132434345swf121", "decrypted_private_key.pem", "public_key.pem")
+	accesstoken, refreshtoken, err := asymmetrictokenservice.GenerateAccessAndRefreshTokens("gurakash.ec20@bitsathy.ac.in", "12132434345swf121", "decrypted_private_key.pem", "public_key.pem")
 	if err != nil {
 		log.Println(err)
 		return
@@ -68,7 +68,7 @@ func main() {
 	log.Println("accesstoken", accesstoken)
 	log.Println("refreshtoken", refreshtoken)
 
-	accesstoken, err = asymmetrictokenservice.RefreshAsymmetricAccessTokenWithKeyPath(refreshtoken, "public_key.pem", "decrypted_private_key.pem")
+	accesstoken, err = asymmetrictokenservice.RefreshAccessToken(refreshtoken, "public_key.pem", "decrypted_private_key.pem")
 	if err != nil {
 		log.Println(err)
 		return
