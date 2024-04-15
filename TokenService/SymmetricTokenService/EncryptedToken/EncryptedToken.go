@@ -167,7 +167,12 @@ func ExtractExpirationTime(jwtToken string, key []byte) (time.Time, error) {
 func RefreshAccessToken(refreshToken, SecretKey string, key []byte) (string, error) {
 	log.Println("\n ***** Refresh Access Encrypted Token ***** ")
 
-	claims, err := ExtractDetails(refreshToken, SecretKey, key)
+	decryptedToken, err := encryptdecrypt.DecryptToken(refreshToken, key)
+	if err != nil {
+		return "", err
+	}
+
+	claims, err := ExtractDetails(decryptedToken, SecretKey, key)
 	if err != nil {
 		return "", err
 	}

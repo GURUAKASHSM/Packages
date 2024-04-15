@@ -12,6 +12,7 @@ func RunAllTests() {
 	// Define a slice to hold all test functions
 	tests := []testing.InternalTest{
 		{Name: "TestCreateEncryptedToken", F: TestCreateEncryptedToken},
+		{Name: "TestCreateEncryptedTokenWithStruct", F: TestCreateEncryptedTokenWithStruct},
 		{Name: "TestExtractIdFromEncryptedToken", F: TestExtractIdFromEncryptedToken},
 		{Name: "TestExtractDetailsFromEncryptedToken", F: TestExtractDetailsFromEncryptedToken},
 		{Name: "TestValidateEncryptedtoken", F: TestValidateEncryptedtoken},
@@ -28,6 +29,10 @@ func RunAllTests() {
 		{Name: "TestGenerateAccessAndRefreshTokens", F:TestGenerateAccessAndRefreshTokens},
 		{Name: "TestRefreshAccessToken", F:TestRefreshAccessToken},
 		{Name: "TestExtractExpirationTimeFromToken", F:TestExtractExpirationTimeFromToken},
+		{Name: "TestExtractIdFromEncryptedTokenWithStruct", F: TestExtractIdFromEncryptedTokenWithStruct},
+		{Name: "TestExtractDetailsFromEncryptedTokenWithStruct", F: TestExtractDetailsFromEncryptedTokenWithStruct},
+		{Name: "TestGenerateAccessAndRefreshEncryptedTokensWithStruct", F: TestGenerateAccessAndRefreshEncryptedTokensWithStruct},
+		{Name: "TestRefreshAccessEncryptedTokenWithStruct", F: TestRefreshAccessEncryptedTokenWithStruct},
 		
 		// Add other test functions here
 	}

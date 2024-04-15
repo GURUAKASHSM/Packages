@@ -28,10 +28,34 @@ func TestCreateEncryptedToken(t *testing.T) {
 	log.Println("\n \n TestCreateEncryptedToken")
 }
 
+func TestCreateEncryptedTokenWithStruct(t *testing.T) {
+	SecretKey := "Anon@123456789"
+	type Test struct{
+		Email string `json:"email" bson:"email"`
+		Id string `json:"id" bson:"id"`
+	}
+	var data  Test
+	data.Email = "guruakash.ec20@bitsathy.ac.in"
+	data.Id = "123456"
+	validtime := int64(1)
+	key := []byte("1234567890123456")
+
+	encryptedToken, err := service.CreateTokenWithStruct(data, SecretKey, validtime, key)
+	if err != nil {
+		t.Errorf("Error creating encrypted token: %v", err)
+	}
+
+	if encryptedToken == "" {
+		t.Error("Encrypted token creation failed")
+	}
+	log.Println("\n \n TestCreateEncryptedToken")
+}
+
 func TestExtractIdFromEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	id := "123456"
 	key := []byte("1234567890123456")
+	
 
 	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", id, SecretKey, 1, key)
 	if err != nil {
@@ -50,11 +74,72 @@ func TestExtractIdFromEncryptedToken(t *testing.T) {
 
 }
 
+
+func TestExtractIdFromEncryptedTokenWithStruct(t *testing.T) {
+	SecretKey := "Anon@123456789"
+	
+	key := []byte("1234567890123456")
+
+	type Test struct{
+		Email string `json:"email" bson:"email"`
+		Id string `json:"id" bson:"id"`
+	}
+	var data  Test
+	data.Email = "guruakash.ec20@bitsathy.ac.in"
+	data.Id = "123456"
+
+	token, err := service.CreateTokenWithStruct(data, SecretKey, 1, key)
+	if err != nil {
+		t.Errorf("Error creating encrypted token: %v", err)
+	}
+
+
+	extractedID, err := service.ExtractIDWithIDFeild(token, SecretKey, key,"id")
+	if err != nil {
+		t.Errorf("Error extracting ID from encrypted token: %v", err)
+	}
+
+	if extractedID != data.Id {
+		t.Errorf("Expected ID: %s, Got: %s", data.Id, extractedID)
+	}
+	log.Println("\n \n TestExtractIdFromEncryptedToken")
+
+}
+
 func TestExtractDetailsFromEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
 	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	if err != nil {
+		t.Errorf("Error creating encrypted token: %v", err)
+	}
+
+	claims, err := service.ExtractDetails(token, SecretKey, key)
+	if err != nil {
+		t.Errorf("Error extracting details from encrypted token: %v", err)
+	}
+
+	if claims == nil {
+		t.Error("Failed to extract details from encrypted token")
+	}
+	log.Println("\n \n TestExtractDetailsFromEncryptedToken")
+
+}
+
+func TestExtractDetailsFromEncryptedTokenWithStruct(t *testing.T) {
+	SecretKey := "Anon@123456789"
+	key := []byte("1234567890123456")
+
+	type Test struct{
+		Email string `json:"email" bson:"email"`
+		Id string `json:"id" bson:"id"`
+	}
+	var data  Test
+	data.Email = "guruakash.ec20@bitsathy.ac.in"
+	data.Id = "123456"
+
+	token, err := service.CreateTokenWithStruct(data, SecretKey, 1, key)
 	if err != nil {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
@@ -153,6 +238,61 @@ func TestGenerateAccessAndRefreshEncryptedTokens(t *testing.T) {
 
 }
 
+func TestGenerateAccessAndRefreshEncryptedTokensWithStruct(t *testing.T) {
+	SecretKey := "Anon@123456789"
+	key := []byte("1234567890123456")
+
+	type Test struct{
+		Email string `json:"email" bson:"email"`
+		Id string `json:"id" bson:"id"`
+	}
+	var data  Test
+	data.Email = "guruakash.ec20@bitsathy.ac.in"
+	data.Id = "123456"
+
+	accessToken, refreshToken, err := service.GenerateAccessAndRefreshEncryptedTokensWithStruct(data, SecretKey, key)
+	if err != nil {
+		t.Errorf("Error generating access and refresh tokens: %v", err)
+	}
+
+	if accessToken == "" || refreshToken == "" {
+		t.Error("Access or refresh token generation failed")
+	}
+	log.Println("\n \n TestGenerateAccessAndRefreshEncryptedTokens")
+
+}
+
+func TestRefreshAccessEncryptedTokenWithStruct(t *testing.T) {
+	SecretKey := "Anon@123456789"
+	key := []byte("1234567890123456")
+
+	type Test struct{
+		Email string `json:"email" bson:"email"`
+		Id string `json:"id" bson:"id"`
+	}
+	var data  Test
+	data.Email = "guruakash.ec20@bitsathy.ac.in"
+	data.Id = "123456"
+
+	refreshToken,_, err := service.GenerateAccessAndRefreshEncryptedTokensWithStruct(data, SecretKey, key)
+	if err != nil {
+		t.Errorf("Error creating refresh token: %v", err)
+	}
+
+	log.Println("Created Token")
+
+	newAccessToken, err := service.RefreshAccessToken(refreshToken, SecretKey, key)
+	if err != nil {
+		t.Errorf("Error refreshing access token: %v", err)
+	}
+
+	if newAccessToken == "" {
+		t.Error("New access token generation failed")
+	}
+	log.Println("\n \n TestRefreshAccessEncryptedToken")
+
+}
+
 func TestRefreshAccessEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
@@ -175,6 +315,7 @@ func TestRefreshAccessEncryptedToken(t *testing.T) {
 	log.Println("\n \n TestRefreshAccessEncryptedToken")
 
 }
+
 
 func TestExtractExpirationTimeFromEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"

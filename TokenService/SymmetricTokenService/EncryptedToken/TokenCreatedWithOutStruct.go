@@ -74,6 +74,16 @@ func GenerateAccessAndRefreshTokens(email, id, SecretKey string, key []byte) (st
 		return "", "", err
 	}
 
+	accessToken, err = encryptdecrypt.EncryptToken(accessToken, key)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err = encryptdecrypt.EncryptToken(refreshToken, key)
+	if err != nil {
+		return "", "", err
+	}
+
 	return accessToken, refreshToken, nil
 }
 
