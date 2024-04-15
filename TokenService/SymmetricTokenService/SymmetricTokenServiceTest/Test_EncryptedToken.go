@@ -4,8 +4,6 @@ import (
 	"log"
 	"testing"
 
-
-    
 	encryptdecrypt "github.com/GURUAKASHSM/Packages/TokenService/EncryptandDecryptToken"
 	service "github.com/GURUAKASHSM/Packages/TokenService/SymmetricTokenService/EncryptedToken"
 )
@@ -30,11 +28,11 @@ func TestCreateEncryptedToken(t *testing.T) {
 
 func TestCreateEncryptedTokenWithStruct(t *testing.T) {
 	SecretKey := "Anon@123456789"
-	type Test struct{
+	type Test struct {
 		Email string `json:"email" bson:"email"`
-		Id string `json:"id" bson:"id"`
+		Id    string `json:"id" bson:"id"`
 	}
-	var data  Test
+	var data Test
 	data.Email = "guruakash.ec20@bitsathy.ac.in"
 	data.Id = "123456"
 	validtime := int64(1)
@@ -55,7 +53,6 @@ func TestExtractIdFromEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	id := "123456"
 	key := []byte("1234567890123456")
-	
 
 	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", id, SecretKey, 1, key)
 	if err != nil {
@@ -74,17 +71,16 @@ func TestExtractIdFromEncryptedToken(t *testing.T) {
 
 }
 
-
 func TestExtractIdFromEncryptedTokenWithStruct(t *testing.T) {
 	SecretKey := "Anon@123456789"
-	
+
 	key := []byte("1234567890123456")
 
-	type Test struct{
+	type Test struct {
 		Email string `json:"email" bson:"email"`
-		Id string `json:"id" bson:"id"`
+		Id    string `json:"id" bson:"id"`
 	}
-	var data  Test
+	var data Test
 	data.Email = "guruakash.ec20@bitsathy.ac.in"
 	data.Id = "123456"
 
@@ -93,8 +89,7 @@ func TestExtractIdFromEncryptedTokenWithStruct(t *testing.T) {
 		t.Errorf("Error creating encrypted token: %v", err)
 	}
 
-
-	extractedID, err := service.ExtractIDWithIDFeild(token, SecretKey, key,"id")
+	extractedID, err := service.ExtractIDWithIDFeild(token, SecretKey, key, "id")
 	if err != nil {
 		t.Errorf("Error extracting ID from encrypted token: %v", err)
 	}
@@ -131,11 +126,11 @@ func TestExtractDetailsFromEncryptedTokenWithStruct(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	type Test struct{
+	type Test struct {
 		Email string `json:"email" bson:"email"`
-		Id string `json:"id" bson:"id"`
+		Id    string `json:"id" bson:"id"`
 	}
-	var data  Test
+	var data Test
 	data.Email = "guruakash.ec20@bitsathy.ac.in"
 	data.Id = "123456"
 
@@ -187,7 +182,6 @@ func TestTokenManager_BlockUnblockEncryptedToken(t *testing.T) {
 	}
 
 	tokenManager := service.NewTokenManager()
-
 
 	err = tokenManager.BlockToken(token, key)
 	if err != nil {
@@ -242,11 +236,11 @@ func TestGenerateAccessAndRefreshEncryptedTokensWithStruct(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	type Test struct{
+	type Test struct {
 		Email string `json:"email" bson:"email"`
-		Id string `json:"id" bson:"id"`
+		Id    string `json:"id" bson:"id"`
 	}
-	var data  Test
+	var data Test
 	data.Email = "guruakash.ec20@bitsathy.ac.in"
 	data.Id = "123456"
 
@@ -266,15 +260,15 @@ func TestRefreshAccessEncryptedTokenWithStruct(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	type Test struct{
+	type Test struct {
 		Email string `json:"email" bson:"email"`
-		Id string `json:"id" bson:"id"`
+		Id    string `json:"id" bson:"id"`
 	}
-	var data  Test
+	var data Test
 	data.Email = "guruakash.ec20@bitsathy.ac.in"
 	data.Id = "123456"
 
-	refreshToken,_, err := service.GenerateAccessAndRefreshEncryptedTokensWithStruct(data, SecretKey, key)
+	refreshToken, _, err := service.GenerateAccessAndRefreshEncryptedTokensWithStruct(data, SecretKey, key)
 	if err != nil {
 		t.Errorf("Error creating refresh token: %v", err)
 	}
@@ -297,7 +291,7 @@ func TestRefreshAccessEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
 	key := []byte("1234567890123456")
 
-	refreshToken,_, err := service.GenerateAccessAndRefreshTokens("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, key)
+	refreshToken, _, err := service.GenerateAccessAndRefreshTokens("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, key)
 	if err != nil {
 		t.Errorf("Error creating refresh token: %v", err)
 	}
@@ -315,7 +309,6 @@ func TestRefreshAccessEncryptedToken(t *testing.T) {
 	log.Println("\n \n TestRefreshAccessEncryptedToken")
 
 }
-
 
 func TestExtractExpirationTimeFromEncryptedToken(t *testing.T) {
 	SecretKey := "Anon@123456789"
@@ -362,4 +355,63 @@ func TestEncryptAndDecryptToken(t *testing.T) {
 	}
 	log.Println("\n \n TestEncryptAndDecryptToken")
 
+}
+
+func TestIsTokenBlocked(t *testing.T) {
+	SecretKey := "Anon@123456789"
+	key := []byte("1234567890123456")
+
+	tokenManager := service.NewTokenManager()
+
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	if err != nil {
+		t.Errorf("Error creating encrypted token: %v", err)
+	}
+
+	err = tokenManager.BlockToken(token, key)
+	if err != nil {
+		t.Errorf("Error blocking encrypted token: %v", err)
+	}
+
+	blocked, err := tokenManager.IsTokenBlocked(token, key)
+	if err != nil {
+		t.Errorf("Error checking if encrypted token is blocked: %v", err)
+	}
+
+	if !blocked {
+		t.Error("Encrypted token should be blocked")
+	}
+	log.Println("\n \n TestIsTokenBlocked")
+}
+
+func TestUnblockToken(t *testing.T) {
+	SecretKey := "Anon@123456789"
+	key := []byte("1234567890123456")
+
+	tokenManager := service.NewTokenManager()
+
+	token, err := service.CreateToken("guruakash.ec20@bitsathy.ac.in", "123456", SecretKey, 1, key)
+	if err != nil {
+		t.Errorf("Error creating encrypted token: %v", err)
+	}
+
+	err = tokenManager.BlockToken(token, key)
+	if err != nil {
+		t.Errorf("Error blocking encrypted token: %v", err)
+	}
+
+	err = tokenManager.UnblockToken(token, SecretKey, key)
+	if err != nil {
+		t.Errorf("Error unblocking encrypted token: %v", err)
+	}
+
+	blocked, err := tokenManager.IsTokenBlocked(token, key)
+	if err != nil {
+		t.Errorf("Error checking if encrypted token is blocked: %v", err)
+	}
+
+	if blocked {
+		t.Error("Encrypted token should not be blocked after unblocking")
+	}
+	log.Println("\n \n TestUnblockToken")
 }

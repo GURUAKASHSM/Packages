@@ -33,6 +33,11 @@ func RunAllTests() {
 		{Name: "TestExtractDetailsFromEncryptedTokenWithStruct", F: TestExtractDetailsFromEncryptedTokenWithStruct},
 		{Name: "TestGenerateAccessAndRefreshEncryptedTokensWithStruct", F: TestGenerateAccessAndRefreshEncryptedTokensWithStruct},
 		{Name: "TestRefreshAccessEncryptedTokenWithStruct", F: TestRefreshAccessEncryptedTokenWithStruct},
+		{Name: "TestExtractIDFromTokenWithStruct", F: TestExtractIDFromTokenWithStruct},
+		{Name: "TestExtractDetailsFromTokenWithStruct", F: TestExtractDetailsFromTokenWithStruct},
+		{Name: "TestExtractExpirationTimeFromTokenWithStruct", F: TestExtractExpirationTimeFromTokenWithStruct},
+		{Name: "TestIsTokenBlocked", F: TestIsTokenBlocked},
+		{Name: "TestUnblockToken", F: TestUnblockToken},
 		
 		// Add other test functions here
 	}
