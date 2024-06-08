@@ -9,9 +9,10 @@ import (
 )
 
 // GenerateProto generates a Protocol Buffer message definition based on the provided struct.
-func GenerateProto(structName string, s interface{}) error {
+func GenerateProto(s interface{}) error {
 	// Use reflection to inspect the fields of the struct
 	structType := reflect.TypeOf(s)
+	structName := structType.Name()
 	var protoMessage string
 	protoMessage += "message " + structName + " {\n\n"
 	count := 1
