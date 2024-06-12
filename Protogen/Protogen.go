@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // GenerateProto generates a Protocol Buffer message definition based on the provided struct.
@@ -37,17 +38,36 @@ func GenerateProto(s interface{}) error {
 		case "primitive.ObjectID":
 			fieldType = "string"
 		}
-
+		fieldName = ToLowerFirst(fieldName)
+        fieldType = strings.TrimPrefix(fieldType, "*")
 		jsonTag := field.Tag.Get("json")
 		bsonTag := field.Tag.Get("bson")
 		validateTag := field.Tag.Get("validate")
 
-		// Remove ",omitempty" from json_name
-		jsonName := strings.Split(jsonTag, ",")[0]
+		if len(jsonTag) == 0 && len(bsonTag) == 0 && len(validateTag) == 0 {
+			protoMessage += "   " + fieldType + " "
+			protoMessage += fieldName + " = " + strconv.Itoa(count) + ";\n\n"
+			count++
+			continue
 
+		}
+		var jsonName string
+		if len(jsonTag) != 0 {
+			jsonName = strings.Split(jsonTag, ",")[0]
+		}
 		protoMessage += "   " + fieldType + " "
-		protoMessage += fieldName + " = " + strconv.Itoa(count) + " [\n     json_name = \"" + jsonName + "\",\n"
-		protoMessage += "     (tagger.tags) = \"json:\\\"" + jsonTag + "\\\""
+
+		protoMessage += fieldName + " = " + strconv.Itoa(count) + " [\n     "
+
+		if len(jsonTag) != 0 {
+			protoMessage += "json_name = \"" + jsonName + "\",\n"
+		}
+
+		protoMessage += "     (tagger.tags) = \""
+
+		if len(jsonTag) != 0{
+			protoMessage += "json:\\\"" + jsonTag + "\\\""
+		}
 
 		if len(bsonTag) != 0 {
 			protoMessage += " bson:\\\"" + bsonTag + "\\\""
@@ -76,4 +96,13 @@ func GenerateProto(s interface{}) error {
 
 	fmt.Println("Proto message written to " + structName + ".proto")
 	return nil
+}
+
+func ToLowerFirst(str string) string {
+	if str == "" {
+		return str
+	}
+	firstRune := []rune(str)[0]
+	lowerFirstRune := unicode.ToLower(firstRune)
+	return string(lowerFirstRune) + str[1:]
 }
